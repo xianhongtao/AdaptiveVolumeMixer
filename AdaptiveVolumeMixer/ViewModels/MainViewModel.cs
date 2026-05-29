@@ -61,42 +61,10 @@ public class MainViewModel : INotifyPropertyChanged
         set { _selectedAvailableProcess = value; OnPropertyChanged(); }
     }
 
-    /// <summary>
-    /// 选中的目标层级
-    /// </summary>
-    private LevelViewModel? _selectedTargetLevel;
-    public LevelViewModel? SelectedTargetLevel
-    {
-        get => _selectedTargetLevel;
-        set { _selectedTargetLevel = value; OnPropertyChanged(); }
-    }
-
-    /// <summary>
-    /// 新进程名称输入
-    /// </summary>
-    private string _newProcessName = string.Empty;
-    public string NewProcessName
-    {
-        get => _newProcessName;
-        set { _newProcessName = value; OnPropertyChanged(); }
-    }
-
-    /// <summary>
-    /// 新进程目标层级
-    /// </summary>
-    private int _newProcessLevel;
-    public int NewProcessLevel
-    {
-        get => _newProcessLevel;
-        set { _newProcessLevel = value; OnPropertyChanged(); }
-    }
-
     public ICommand StartMonitoringCommand { get; }
     public ICommand StopMonitoringCommand { get; }
     public ICommand RefreshProcessesCommand { get; }
-    public ICommand AddProcessCommand { get; }
     public ICommand RemoveProcessCommand { get; }
-    public ICommand AddAvailableProcessToLevelCommand { get; }
     public ICommand SaveConfigCommand { get; }
 
     public MainViewModel()
@@ -108,9 +76,7 @@ public class MainViewModel : INotifyPropertyChanged
         StartMonitoringCommand = new RelayCommand(StartMonitoring, () => IsNotMonitoring);
         StopMonitoringCommand = new RelayCommand(StopMonitoring, () => IsMonitoring);
         RefreshProcessesCommand = new RelayCommand(RefreshAvailableProcesses);
-        AddProcessCommand = new RelayCommand(AddProcess);
         RemoveProcessCommand = new RelayCommand<LevelItemViewModel>(RemoveProcess);
-        AddAvailableProcessToLevelCommand = new RelayCommand(AddAvailableProcessToLevel);
         SaveConfigCommand = new RelayCommand(SaveConfig);
 
         _volumeController.OnStateChanged += OnVolumeStateChanged;
@@ -175,24 +141,6 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// 添加进程到层级
-    /// </summary>
-    private void AddProcess()
-    {
-        if (string.IsNullOrWhiteSpace(NewProcessName))
-            return;
-
-        string processName = NewProcessName.Trim();
-        if (!processName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-            processName += ".exe";
-
-        _volumeController.AddProcessToLevel(processName, NewProcessLevel);
-        NewProcessName = string.Empty;
-        RefreshLevelViews();
-        StatusText = $"已添加 {processName} 到层级 {NewProcessLevel}";
-    }
-
-    /// <summary>
     /// 从层级移除进程
     /// </summary>
     private void RemoveProcess(LevelItemViewModel? item)
@@ -206,16 +154,14 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// 将选中的可用进程添加到层级
+    /// 将指定音频进程添加到指定层级（供拖拽调用）
     /// </summary>
-    private void AddAvailableProcessToLevel()
+    public void AddProcessToLevel(AudioProcess process, int level)
     {
-        if (SelectedAvailableProcess == null || SelectedTargetLevel == null)
-            return;
-
-        _volumeController.AddProcessToLevel(SelectedAvailableProcess.ProcessName, SelectedTargetLevel.Level);
+        _volumeController.AddProcessToLevel(process.ProcessName, level);
         RefreshLevelViews();
-        StatusText = $"已添加 {SelectedAvailableProcess.DisplayName} 到 {SelectedTargetLevel.DisplayName}";
+        var levelVm = Levels.FirstOrDefault(l => l.Level == level);
+        StatusText = $"已添加 {process.DisplayName} 到 {levelVm?.DisplayName ?? level.ToString()}";
     }
 
     /// <summary>
