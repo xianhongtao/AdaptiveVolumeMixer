@@ -4,7 +4,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:AdaptiveVolumeMixer.ViewModels"
-        xmlns:local="clr-namespace:AdaptiveVolumeMixer"
         mc:Ignorable="d"
         x:Name="MainWindowRoot"
         Title="Adaptive Volume Mixer - 自适应音量合成器"
@@ -14,24 +13,9 @@
         MinWidth="700"
         WindowStartupLocation="CenterScreen"
         FontFamily="Microsoft YaHei, Segoe UI">
-    <Window.DataContext>
-        <vm:MainViewModel/>
-    </Window.DataContext>
 
     <Window.Resources>
-        <!-- 转换器 -->
-        <local:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
-        <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility"/>
-        <local:NullToBoolConverter x:Key="NullToBool"/>
-        <local:LevelIndexToColorBrushConverter x:Key="LevelIndexToColor"/>
-
-        <!-- 状态颜色 -->
-        <SolidColorBrush x:Key="PlayingColor"
-                         Color="#4CAF50"/>
-        <SolidColorBrush x:Key="SuppressedColor"
-                         Color="#FF9800"/>
-        <SolidColorBrush x:Key="IdleColor"
-                         Color="#9E9E9E"/>
+        <!-- 局部样式（仅 MainWindow 使用） -->
 
         <Style x:Key="LevelHeaderStyle"
                TargetType="TextBlock">

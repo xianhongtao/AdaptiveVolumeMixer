@@ -1,8 +1,6 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows.Data;
-using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using AdaptiveVolumeMixer.Models;
 using AdaptiveVolumeMixer.Services;
 
@@ -11,13 +9,11 @@ namespace AdaptiveVolumeMixer.ViewModels;
 /// <summary>
 /// 主界面 ViewModel
 /// </summary>
-public class MainViewModel : INotifyPropertyChanged
+public partial class MainViewModel : ObservableObject
 {
     private readonly AudioSessionService _audioManager;
     private readonly VolumeController _volumeController;
     private readonly ConfigManager _configManager;
-
-    public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>
     /// 层级视图集合
@@ -32,58 +28,37 @@ public class MainViewModel : INotifyPropertyChanged
     /// <summary>
     /// 状态信息
     /// </summary>
+    [ObservableProperty]
     private string _statusText = "就绪";
-    public string StatusText
-    {
-        get => _statusText;
-        set { _statusText = value; OnPropertyChanged(); }
-    }
 
     /// <summary>
     /// 监控是否运行中
     /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNotMonitoring))]
     private bool _isMonitoring;
-    public bool IsMonitoring
-    {
-        get => _isMonitoring;
-        set { _isMonitoring = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsNotMonitoring)); }
-    }
 
     public bool IsNotMonitoring => !IsMonitoring;
 
     /// <summary>
     /// 选中的可用进程
     /// </summary>
+    [ObservableProperty]
     private AudioProcess? _selectedAvailableProcess;
-    public AudioProcess? SelectedAvailableProcess
+
+    public MainViewModel(AudioSessionService audioManager, VolumeController volumeController, ConfigManager configManager)
     {
-        get => _selectedAvailableProcess;
-        set { _selectedAvailableProcess = value; OnPropertyChanged(); }
-    }
-
-    public ICommand StartMonitoringCommand { get; }
-    public ICommand StopMonitoringCommand { get; }
-    public ICommand RefreshProcessesCommand { get; }
-    public ICommand RemoveProcessCommand { get; }
-    public ICommand SaveConfigCommand { get; }
-    public ICommand AddLevelCommand { get; }
-    public ICommand RemoveLevelCommand { get; }
-
-    public MainViewModel()
-    {
-        _configManager = new ConfigManager();
-        _audioManager = new AudioSessionService();
-        _volumeController = new VolumeController(_audioManager, _configManager);
-
-        StartMonitoringCommand = new RelayCommand(StartMonitoring, () => IsNotMonitoring);
-        StopMonitoringCommand = new RelayCommand(StopMonitoring, () => IsMonitoring);
-        RefreshProcessesCommand = new RelayCommand(RefreshAvailableProcesses);
-        RemoveProcessCommand = new RelayCommand<LevelItemViewModel>(RemoveProcess);
-        SaveConfigCommand = new RelayCommand(SaveConfig);
-        AddLevelCommand = new RelayCommand(AddLevel);
-        RemoveLevelCommand = new RelayCommand<LevelViewModel>(RemoveLevel, vm => Levels.Count > 1);
+        _audioManager = audioManager;
+        _volumeController = volumeController;
+        _configManager = configManager;
 
         _volumeController.OnStateChanged += OnVolumeStateChanged;
+
+        Levels.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(Levels));
+            RemoveLevelCommand.NotifyCanExecuteChanged();
+        };
 
         LoadConfig();
         InitializeAudio();
@@ -121,7 +96,8 @@ public class MainViewModel : INotifyPropertyChanged
     /// <summary>
     /// 刷新可用进程列表
     /// </summary>
-    public void RefreshAvailableProcesses()
+    [RelayCommand]
+    private void RefreshAvailableProcesses()
     {
         var sessions = _audioManager.GetAllAudioSessions();
         AvailableProcesses.Clear();
@@ -135,7 +111,8 @@ public class MainViewModel : INotifyPropertyChanged
     /// <summary>
     /// 启动监控
     /// </summary>
-    public void StartMonitoring()
+    [RelayCommand(CanExecute = nameof(IsNotMonitoring))]
+    private void StartMonitoring()
     {
         _volumeController.Start();
         IsMonitoring = true;
@@ -145,7 +122,8 @@ public class MainViewModel : INotifyPropertyChanged
     /// <summary>
     /// 停止监控
     /// </summary>
-    public void StopMonitoring()
+    [RelayCommand(CanExecute = nameof(IsMonitoring))]
+    private void StopMonitoring()
     {
         _volumeController.Stop();
         IsMonitoring = false;
@@ -155,6 +133,7 @@ public class MainViewModel : INotifyPropertyChanged
     /// <summary>
     /// 从层级移除进程
     /// </summary>
+    [RelayCommand]
     private void RemoveProcess(LevelItemViewModel? item)
     {
         if (item == null || string.IsNullOrWhiteSpace(item.ProcessName))
@@ -179,6 +158,7 @@ public class MainViewModel : INotifyPropertyChanged
     /// <summary>
     /// 保存配置
     /// </summary>
+    [RelayCommand]
     private void SaveConfig()
     {
         _configManager.SaveConfig();
@@ -188,28 +168,27 @@ public class MainViewModel : INotifyPropertyChanged
     /// <summary>
     /// 添加新层级
     /// </summary>
+    [RelayCommand]
     private void AddLevel()
     {
         // 新层级放在列表末尾（最低优先级），使用极低的 Level 值确保排序后排最后
-        var newLevelConfig = new LevelConfig(int.MinValue, $"新层级");
+        var newLevelConfig = new LevelConfig(int.MinValue, "新层级");
         _configManager.Config.Levels.Add(newLevelConfig);
 
         RenumberLevels();
         _configManager.SaveConfig();
 
-        StatusText = $"已添加新层级";
+        StatusText = "已添加新层级";
     }
 
     /// <summary>
     /// 删除指定层级
     /// </summary>
+    [RelayCommand(CanExecute = nameof(CanRemoveLevel))]
     private void RemoveLevel(LevelViewModel? levelVm)
     {
-        if (levelVm == null || Levels.Count <= 1)
-        {
-            StatusText = "至少需要保留一个层级";
+        if (levelVm == null)
             return;
-        }
 
         string removedName = levelVm.DisplayName;
 
@@ -231,6 +210,8 @@ public class MainViewModel : INotifyPropertyChanged
 
         StatusText = $"已删除 {removedName}";
     }
+
+    private bool CanRemoveLevel => Levels.Count > 1;
 
     /// <summary>
     /// 按列表位置重新编号所有层级（索引 0 → Level 0，索引 N → Level -N）
@@ -314,190 +295,6 @@ public class MainViewModel : INotifyPropertyChanged
 
     private void OnVolumeStateChanged()
     {
-        App.Current.Dispatcher.Invoke(() =>
-        {
-            RefreshLevelViews();
-        });
-    }
-
-    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-}
-
-/// <summary>
-/// 层级视图模型
-/// </summary>
-public class LevelViewModel : INotifyPropertyChanged
-{
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    /// <summary>
-    /// 当属性变更时触发，用于通知 MainViewModel 同步配置
-    /// </summary>
-    public event Action<string>? PropertyUpdated;
-
-    private int _level;
-    public int Level
-    {
-        get => _level;
-        set { _level = value; OnPropertyChanged(); }
-    }
-
-    private int _levelIndex;
-    /// <summary>
-    /// 层级在列表中的 0-based 索引，用于颜色转换器
-    /// </summary>
-    public int LevelIndex
-    {
-        get => _levelIndex;
-        set { _levelIndex = value; OnPropertyChanged(); }
-    }
-
-    private string _displayName = string.Empty;
-    public string DisplayName
-    {
-        get => _displayName;
-        set { _displayName = value; OnPropertyChanged(); PropertyUpdated?.Invoke(nameof(DisplayName)); }
-    }
-
-    private float _suppressRatio = 0.2f;
-    public float SuppressRatio
-    {
-        get => _suppressRatio;
-        set { _suppressRatio = value; OnPropertyChanged(); OnPropertyChanged(nameof(SuppressRatioPercent)); PropertyUpdated?.Invoke(nameof(SuppressRatio)); }
-    }
-
-    /// <summary>
-    /// 压制比例的百分比显示文本
-    /// </summary>
-    public string SuppressRatioPercent => $"{_suppressRatio:P0}";
-
-    public ObservableCollection<LevelItemViewModel> Processes { get; } = new();
-
-    private string _processCount = "(0 个进程)";
-    public string ProcessCount
-    {
-        get => _processCount;
-        private set { _processCount = value; OnPropertyChanged(); }
-    }
-
-    public LevelViewModel()
-    {
-        Processes.CollectionChanged += (_, _) =>
-        {
-            ProcessCount = $"({Processes.Count} 个进程)";
-        };
-    }
-
-    public void OnPropertyChanged([CallerMemberName] string? name = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-    }
-}
-
-/// <summary>
-/// 层级中的进程项视图模型
-/// </summary>
-public class LevelItemViewModel : INotifyPropertyChanged
-{
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    public int Level { get; set; }
-    public string ProcessName { get; set; } = string.Empty;
-    public string DisplayName { get; set; } = string.Empty;
-
-    private bool _isPlaying;
-    public bool IsPlaying
-    {
-        get => _isPlaying;
-        set { _isPlaying = value; OnPropertyChanged(); OnPropertyChanged(nameof(StatusText)); }
-    }
-
-    private bool _isSuppressed;
-    public bool IsSuppressed
-    {
-        get => _isSuppressed;
-        set { _isSuppressed = value; OnPropertyChanged(); OnPropertyChanged(nameof(StatusText)); }
-    }
-
-    private float _currentVolume;
-    public float CurrentVolume
-    {
-        get => _currentVolume;
-        set { _currentVolume = value; OnPropertyChanged(); OnPropertyChanged(nameof(VolumeText)); }
-    }
-
-    private float _originalVolume;
-    public float OriginalVolume
-    {
-        get => _originalVolume;
-        set { _originalVolume = value; OnPropertyChanged(); }
-    }
-
-    public string VolumeText => $"{CurrentVolume:P0}";
-    public string StatusText => IsPlaying ? "🔊 播放中" : (IsSuppressed ? "🔇 被压制" : "🔈 静默");
-
-    public void OnPropertyChanged([CallerMemberName] string? name = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-    }
-}
-
-/// <summary>
-/// 简单的 ICommand 实现
-/// </summary>
-public class RelayCommand : ICommand
-{
-    private readonly Action _execute;
-    private readonly Func<bool>? _canExecute;
-
-    public event EventHandler? CanExecuteChanged
-    {
-        add { CommandManager.RequerySuggested += value; }
-        remove { CommandManager.RequerySuggested -= value; }
-    }
-
-    public RelayCommand(Action execute, Func<bool>? canExecute = null)
-    {
-        _execute = execute;
-        _canExecute = canExecute;
-    }
-
-    public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
-    public void Execute(object? parameter) => _execute();
-}
-
-public class RelayCommand<T> : ICommand
-{
-    private readonly Action<T?> _execute;
-    private readonly Func<T?, bool>? _canExecute;
-
-    public event EventHandler? CanExecuteChanged
-    {
-        add { CommandManager.RequerySuggested += value; }
-        remove { CommandManager.RequerySuggested -= value; }
-    }
-
-    public RelayCommand(Action<T?> execute, Func<T?, bool>? canExecute = null)
-    {
-        _execute = execute;
-        _canExecute = canExecute;
-    }
-
-    public bool CanExecute(object? parameter)
-    {
-        if (parameter is T t)
-            return _canExecute?.Invoke(t) ?? true;
-        return _canExecute?.Invoke(default) ?? true;
-    }
-
-    public void Execute(object? parameter)
-    {
-        if (parameter is T t)
-            _execute(t);
-        else
-            _execute(default);
+        App.Current.Dispatcher.Invoke(RefreshLevelViews);
     }
 }
