@@ -19,24 +19,11 @@
     </Window.DataContext>
 
     <Window.Resources>
-        <!-- 布尔值转可见性转换器 -->
+        <!-- 转换器 -->
         <local:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
         <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility"/>
         <local:NullToBoolConverter x:Key="NullToBool"/>
-
-        <!-- 层级背景色 -->
-        <SolidColorBrush x:Key="Level0Bg"
-                         Color="#1A237E"/>
-        <SolidColorBrush x:Key="Level1Bg"
-                         Color="#283593"/>
-        <SolidColorBrush x:Key="Level2Bg"
-                         Color="#303F9F"/>
-        <SolidColorBrush x:Key="Level3Bg"
-                         Color="#3949AB"/>
-        <SolidColorBrush x:Key="Level4Bg"
-                         Color="#3F51B5"/>
-        <SolidColorBrush x:Key="Level5Bg"
-                         Color="#5C6BC0"/>
+        <local:LevelIndexToColorBrushConverter x:Key="LevelIndexToColor"/>
 
         <!-- 状态颜色 -->
         <SolidColorBrush x:Key="PlayingColor"
@@ -52,37 +39,10 @@
                     Value="16"/>
             <Setter Property="FontWeight"
                     Value="Bold"/>
-            <Setter Property="Foreground"
-                    Value="{StaticResource Level0Bg}"/>
             <Setter Property="Margin"
                     Value="10,8,0,8"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding Level}"
-                             Value="-1">
-                    <Setter Property="Foreground"
-                            Value="{StaticResource Level1Bg}"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Level}"
-                             Value="-2">
-                    <Setter Property="Foreground"
-                            Value="{StaticResource Level2Bg}"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Level}"
-                             Value="-3">
-                    <Setter Property="Foreground"
-                            Value="{StaticResource Level3Bg}"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Level}"
-                             Value="-4">
-                    <Setter Property="Foreground"
-                            Value="{StaticResource Level4Bg}"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Level}"
-                             Value="-5">
-                    <Setter Property="Foreground"
-                            Value="{StaticResource Level5Bg}"/>
-                </DataTrigger>
-            </Style.Triggers>
+            <Setter Property="Foreground"
+                    Value="{Binding LevelIndex, Converter={StaticResource LevelIndexToColor}}"/>
         </Style>
 
         <Style x:Key="ProcessItemStyle"
@@ -214,6 +174,12 @@
                             Foreground="White"
                             Padding="12,6"
                             Margin="0,0,6,0"/>
+                    <Button Content="➕ 添加层级"
+                            Command="{Binding AddLevelCommand}"
+                            Background="#9C27B0"
+                            Foreground="White"
+                            Padding="12,6"
+                            Margin="0,0,6,0"/>
                     <Button Content="💾 保存配置"
                             Command="{Binding SaveConfigCommand}"
                             Background="#607D8B"
@@ -251,58 +217,82 @@
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
 
+                                            <!-- 颜色条 -->
                                             <Border Grid.Column="0"
                                                     Width="8"
-                                                    CornerRadius="6,0,0,0">
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="Background"
-                                                                Value="{StaticResource Level0Bg}"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Level}"
-                                                                         Value="-1">
-                                                                <Setter Property="Background"
-                                                                        Value="{StaticResource Level1Bg}"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Level}"
-                                                                         Value="-2">
-                                                                <Setter Property="Background"
-                                                                        Value="{StaticResource Level2Bg}"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Level}"
-                                                                         Value="-3">
-                                                                <Setter Property="Background"
-                                                                        Value="{StaticResource Level3Bg}"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Level}"
-                                                                         Value="-4">
-                                                                <Setter Property="Background"
-                                                                        Value="{StaticResource Level4Bg}"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Level}"
-                                                                         Value="-5">
-                                                                <Setter Property="Background"
-                                                                        Value="{StaticResource Level5Bg}"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                            </Border>
+                                                    CornerRadius="6,0,0,0"
+                                                    Background="{Binding LevelIndex, Converter={StaticResource LevelIndexToColor}}"/>
 
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{Binding DisplayName}"
-                                                       Style="{StaticResource LevelHeaderStyle}"/>
+                                            <!-- 可编辑的显示名称 -->
+                                            <TextBox Grid.Column="1"
+                                                     Text="{Binding DisplayName, UpdateSourceTrigger=PropertyChanged}"
+                                                     FontSize="16"
+                                                     FontWeight="Bold"
+                                                     BorderThickness="0"
+                                                     Background="Transparent"
+                                                     Foreground="{Binding LevelIndex, Converter={StaticResource LevelIndexToColor}}"
+                                                     VerticalAlignment="Center"
+                                                     Margin="10,8,0,8"
+                                                     MinWidth="80"/>
 
+                                            <!-- 进程计数 -->
                                             <TextBlock Grid.Column="2"
                                                        Text="{Binding ProcessCount}"
                                                        FontSize="11"
                                                        Foreground="#999"
                                                        VerticalAlignment="Center"
-                                                       Margin="0,0,10,0"/>
+                                                       Margin="4,0,8,0"/>
+
+                                            <!-- 压制比例滑块 -->
+                                            <StackPanel Grid.Column="3"
+                                                        Orientation="Horizontal"
+                                                        VerticalAlignment="Center"
+                                                        Margin="0,0,8,0">
+                                                <TextBlock Text="压制:"
+                                                           FontSize="11"
+                                                           Foreground="#666"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,4,0"/>
+                                                <Slider Value="{Binding SuppressRatio}"
+                                                        Minimum="0"
+                                                        Maximum="1"
+                                                        SmallChange="0.05"
+                                                        LargeChange="0.1"
+                                                        TickFrequency="0.05"
+                                                        IsSnapToTickEnabled="True"
+                                                        Width="100"
+                                                        VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding SuppressRatioPercent}"
+                                                           FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#555"
+                                                           VerticalAlignment="Center"
+                                                           Margin="6,0,0,0"
+                                                           MinWidth="30"/>
+                                            </StackPanel>
+
+                                            <!-- 删除层级按钮 -->
+                                            <Button Grid.Column="4"
+                                                    Content="✕"
+                                                    Command="{Binding DataContext.RemoveLevelCommand, ElementName=MainWindowRoot}"
+                                                    CommandParameter="{Binding}"
+                                                    Background="Transparent"
+                                                    Foreground="#F44336"
+                                                    BorderThickness="0"
+                                                    FontSize="14"
+                                                    Width="24"
+                                                    Height="24"
+                                                    ToolTip="删除此层级"
+                                                    VerticalAlignment="Center"
+                                                    HorizontalAlignment="Right"
+                                                    Margin="0,0,4,0"/>
                                         </Grid>
 
                                         <!-- 进程列表 -->
@@ -476,11 +466,17 @@
                                        Margin="0,0,0,4"/>
                             <TextBlock Text="2. 点击「启动监控」开始自动音量调节"
                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="3. 当上级软件播放声音时，下级音量自动降至20%"
+                            <TextBlock Text="3. 当上级软件播放声音时，下级音量按比例自动降低"
                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="4. 层级0为最高优先级，层级-5为最低"
+                            <TextBlock Text="4. 层级0为最高优先级，越往下优先级越低"
                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="5. 配置会自动保存到 config.json"/>
+                            <TextBlock Text="5. 使用「添加/删除层级」按钮管理层级数量"
+                                       Margin="0,0,0,4"/>
+                            <TextBlock Text="6. 拖动滑块可调整每个层级的压制音量比例"
+                                       Margin="0,0,0,4"/>
+                            <TextBlock Text="7. 点击层级名称可直接编辑"
+                                       Margin="0,0,0,4"/>
+                            <TextBlock Text="8. 配置会自动保存到 config.json"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -509,11 +505,35 @@
                            FontSize="11"
                            Foreground="#666"
                            VerticalAlignment="Center"/>
-                <TextBlock Grid.Column="2"
-                           FontSize="11"
-                           Foreground="#999"
-                           VerticalAlignment="Center"
-                           Text="{Binding IsMonitoring, StringFormat='层级: 6 | 监控: {0}'}"/>
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="层级: "
+                               FontSize="11"
+                               Foreground="#999"/>
+                    <TextBlock Text="{Binding Levels.Count}"
+                               FontSize="11"
+                               Foreground="#999"/>
+                    <TextBlock Text=" | 监控: "
+                               FontSize="11"
+                               Foreground="#999"/>
+                    <TextBlock FontSize="11"
+                               Foreground="#999">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text"
+                                        Value="运行中"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMonitoring}"
+                                            Value="False">
+                                        <Setter Property="Text"
+                                                Value="已停止"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
             </Grid>
         </Border>
     </Grid>

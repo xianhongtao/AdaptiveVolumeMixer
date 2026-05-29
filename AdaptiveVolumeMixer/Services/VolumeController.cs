@@ -263,6 +263,35 @@ public class VolumeController : IDisposable
         }
     }
 
+    /// <summary>
+    /// 根据当前配置重新匹配所有追踪进程的层级（用于层级重编号后同步）
+    /// </summary>
+    public void ReassignProcessLevels()
+    {
+        var config = _configManager.Config;
+        lock (_lock)
+        {
+            foreach (var process in _trackedProcesses.Values)
+            {
+                int? matchedLevel = null;
+                foreach (var level in config.Levels)
+                {
+                    if (level.ProcessNames.Any(p =>
+                            process.ProcessName.Contains(p, StringComparison.OrdinalIgnoreCase) ||
+                            p.Contains(process.ProcessName, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        matchedLevel = level.Level;
+                        break;
+                    }
+                }
+
+                if (matchedLevel.HasValue)
+                    process.Level = matchedLevel.Value;
+            }
+        }
+        OnStateChanged?.Invoke();
+    }
+
     public void Dispose()
     {
         Stop();

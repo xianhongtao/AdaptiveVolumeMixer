@@ -66,6 +66,8 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand RefreshProcessesCommand { get; }
     public ICommand RemoveProcessCommand { get; }
     public ICommand SaveConfigCommand { get; }
+    public ICommand AddLevelCommand { get; }
+    public ICommand RemoveLevelCommand { get; }
 
     public MainViewModel()
     {
@@ -78,6 +80,8 @@ public class MainViewModel : INotifyPropertyChanged
         RefreshProcessesCommand = new RelayCommand(RefreshAvailableProcesses);
         RemoveProcessCommand = new RelayCommand<LevelItemViewModel>(RemoveProcess);
         SaveConfigCommand = new RelayCommand(SaveConfig);
+        AddLevelCommand = new RelayCommand(AddLevel);
+        RemoveLevelCommand = new RelayCommand<LevelViewModel>(RemoveLevel, vm => Levels.Count > 1);
 
         _volumeController.OnStateChanged += OnVolumeStateChanged;
 
@@ -95,14 +99,22 @@ public class MainViewModel : INotifyPropertyChanged
     private void LoadConfig()
     {
         Levels.Clear();
-        foreach (var level in _configManager.Config.Levels.OrderByDescending(l => l.Level))
+        // 按 Level 降序排列（0 为最高优先级，排在最上面）
+        var sorted = _configManager.Config.Levels.OrderByDescending(l => l.Level).ToList();
+        for (int i = 0; i < sorted.Count; i++)
         {
-            Levels.Add(new LevelViewModel
+            var level = sorted[i];
+            var levelVm = new LevelViewModel
             {
                 Level = level.Level,
+                LevelIndex = i,
                 DisplayName = level.DisplayName,
                 SuppressRatio = level.SuppressVolumeRatio,
-            });
+            };
+            // 用闭包绑定，确保回调能识别是哪个 LevelViewModel
+            var capturedVm = levelVm;
+            levelVm.PropertyUpdated += (propName) => OnLevelPropertyUpdated(capturedVm, propName);
+            Levels.Add(levelVm);
         }
     }
 
@@ -174,6 +186,101 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
+    /// 添加新层级
+    /// </summary>
+    private void AddLevel()
+    {
+        // 新层级放在列表末尾（最低优先级），使用极低的 Level 值确保排序后排最后
+        var newLevelConfig = new LevelConfig(int.MinValue, $"新层级");
+        _configManager.Config.Levels.Add(newLevelConfig);
+
+        RenumberLevels();
+        _configManager.SaveConfig();
+
+        StatusText = $"已添加新层级";
+    }
+
+    /// <summary>
+    /// 删除指定层级
+    /// </summary>
+    private void RemoveLevel(LevelViewModel? levelVm)
+    {
+        if (levelVm == null || Levels.Count <= 1)
+        {
+            StatusText = "至少需要保留一个层级";
+            return;
+        }
+
+        string removedName = levelVm.DisplayName;
+
+        // 从配置中移除
+        var configToRemove = _configManager.Config.Levels
+            .FirstOrDefault(l => l.Level == levelVm.Level);
+        if (configToRemove != null)
+        {
+            // 将该层级的进程全部移除追踪
+            foreach (var processName in configToRemove.ProcessNames)
+            {
+                _volumeController.RemoveProcessFromLevel(processName, levelVm.Level);
+            }
+            _configManager.Config.Levels.Remove(configToRemove);
+        }
+
+        RenumberLevels();
+        _configManager.SaveConfig();
+
+        StatusText = $"已删除 {removedName}";
+    }
+
+    /// <summary>
+    /// 按列表位置重新编号所有层级（索引 0 → Level 0，索引 N → Level -N）
+    /// 同步更新配置、VolumeController 追踪进程的 Level，以及 LevelIndex
+    /// </summary>
+    private void RenumberLevels()
+    {
+        var config = _configManager.Config;
+        // 按当前 Level 降序排列后重新编号
+        var sortedConfigs = config.Levels.OrderByDescending(l => l.Level).ToList();
+
+        // 更新配置中的 Level 值和 DisplayName
+        for (int i = 0; i < sortedConfigs.Count; i++)
+        {
+            var cfg = sortedConfigs[i];
+            cfg.Level = -i;
+
+            // 如果名称仍为默认模板（如 "层级 N" 或 "新层级"），则自动更新
+            if (string.IsNullOrWhiteSpace(cfg.DisplayName) ||
+                cfg.DisplayName.StartsWith("层级 ") ||
+                cfg.DisplayName == "新层级")
+            {
+                cfg.DisplayName = i == 0 ? "层级 0 (最高优先级)" : $"层级 {cfg.Level}";
+            }
+        }
+
+        // 重新加载 UI 层级集合
+        LoadConfig();
+
+        // 同步 VolumeController 中追踪进程的层级
+        _volumeController.ReassignProcessLevels();
+
+        // 刷新层级视图
+        RefreshLevelViews();
+    }
+
+    /// <summary>
+    /// 层级属性变更回调（DisplayName 或 SuppressRatio 改变时同步到配置）
+    /// </summary>
+    private void OnLevelPropertyUpdated(LevelViewModel levelVm, string propertyName)
+    {
+        var configLevel = _configManager.Config.Levels.FirstOrDefault(l => l.Level == levelVm.Level);
+        if (configLevel == null) return;
+
+        configLevel.DisplayName = levelVm.DisplayName;
+        configLevel.SuppressVolumeRatio = levelVm.SuppressRatio;
+        _configManager.SaveConfig();
+    }
+
+    /// <summary>
     /// 刷新层级视图
     /// </summary>
     private void RefreshLevelViews()
@@ -226,13 +333,63 @@ public class LevelViewModel : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public int Level { get; set; }
-    public string DisplayName { get; set; } = string.Empty;
-    public float SuppressRatio { get; set; } = 0.2f;
+    /// <summary>
+    /// 当属性变更时触发，用于通知 MainViewModel 同步配置
+    /// </summary>
+    public event Action<string>? PropertyUpdated;
+
+    private int _level;
+    public int Level
+    {
+        get => _level;
+        set { _level = value; OnPropertyChanged(); }
+    }
+
+    private int _levelIndex;
+    /// <summary>
+    /// 层级在列表中的 0-based 索引，用于颜色转换器
+    /// </summary>
+    public int LevelIndex
+    {
+        get => _levelIndex;
+        set { _levelIndex = value; OnPropertyChanged(); }
+    }
+
+    private string _displayName = string.Empty;
+    public string DisplayName
+    {
+        get => _displayName;
+        set { _displayName = value; OnPropertyChanged(); PropertyUpdated?.Invoke(nameof(DisplayName)); }
+    }
+
+    private float _suppressRatio = 0.2f;
+    public float SuppressRatio
+    {
+        get => _suppressRatio;
+        set { _suppressRatio = value; OnPropertyChanged(); OnPropertyChanged(nameof(SuppressRatioPercent)); PropertyUpdated?.Invoke(nameof(SuppressRatio)); }
+    }
+
+    /// <summary>
+    /// 压制比例的百分比显示文本
+    /// </summary>
+    public string SuppressRatioPercent => $"{_suppressRatio:P0}";
 
     public ObservableCollection<LevelItemViewModel> Processes { get; } = new();
 
-    public string ProcessCount => $"({Processes.Count} 个进程)";
+    private string _processCount = "(0 个进程)";
+    public string ProcessCount
+    {
+        get => _processCount;
+        private set { _processCount = value; OnPropertyChanged(); }
+    }
+
+    public LevelViewModel()
+    {
+        Processes.CollectionChanged += (_, _) =>
+        {
+            ProcessCount = $"({Processes.Count} 个进程)";
+        };
+    }
 
     public void OnPropertyChanged([CallerMemberName] string? name = null)
     {
