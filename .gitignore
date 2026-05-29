@@ -1,1 +1,51 @@
-AdaptiveVolumeMixer/bin/Debug/net10.0-windows/config.json
+## .NET / C# / WPF 项目标准 gitignore
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# 构建产物
+**/[Bb]in/
+**/[Oo]bj/
+*.exe
+*.dll
+*.pdb
+*.app
+*.ipa
+
+# NuGet
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nupkg
+**/[Pp]ackages/repositories.config
+
+# 用户配置
+*.cache
+*.cachefile
+appsettings.*.json
+appsettings.Development.json
+
+# VS Code
+.vscode/
+
+# Windows 缩略图
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# 临时文件
+*.tmp
+*.temp
+*.log
+*.swp
+*.~
+
+# 系统文件
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
