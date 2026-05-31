@@ -26,11 +26,34 @@ public class VolumeController : IDisposable
     /// </summary>
     public event Action? OnStateChanged;
 
+    private static bool IsProcessMatch(AudioProcess session, string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return false;
+
+        if (session.ProcessName.Contains(token, StringComparison.OrdinalIgnoreCase) ||
+            token.Contains(session.ProcessName, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (!string.IsNullOrWhiteSpace(session.DisplayName) &&
+            (session.DisplayName.Contains(token, StringComparison.OrdinalIgnoreCase) ||
+             token.Contains(session.DisplayName, StringComparison.OrdinalIgnoreCase)))
+            return true;
+
+        if (!string.IsNullOrWhiteSpace(session.MatchName) &&
+            (session.MatchName.Contains(token, StringComparison.OrdinalIgnoreCase) ||
+             token.Contains(session.MatchName, StringComparison.OrdinalIgnoreCase)))
+            return true;
+
+        return false;
+    }
+
     public VolumeController(AudioSessionService audioSessionService, ConfigManager configManager)
     {
         _audioSessionService = audioSessionService;
         _configManager = configManager;
     }
+
 
     /// <summary>
     /// 启动监控
@@ -73,9 +96,7 @@ public class VolumeController : IDisposable
                 int? matchedLevel = null;
                 foreach (var level in config.Levels)
                 {
-                    if (level.ProcessNames.Any(p =>
-                            session.ProcessName.Contains(p, StringComparison.OrdinalIgnoreCase) ||
-                            p.Contains(session.ProcessName, StringComparison.OrdinalIgnoreCase)))
+                    if (level.ProcessNames.Any(p => IsProcessMatch(session, p)))
                     {
                         matchedLevel = level.Level;
                         break;
@@ -92,6 +113,10 @@ public class VolumeController : IDisposable
                         // 更新现有进程状态
                         existing.IsPlaying = session.IsPlaying;
                         existing.CurrentVolume = session.CurrentVolume;
+                        if (!existing.IsSuppressed)
+                        {
+                            existing.OriginalVolume = session.CurrentVolume;
+                        }
                     }
                     else
                     {
@@ -138,7 +163,7 @@ public class VolumeController : IDisposable
 
     /// <summary>
     /// 应用音量规则
-    /// 核心逻辑：如果某个层级有软件正在播放，则所有下级音量降至各层级配置的压制比例
+    /// 核心逻辑：如果某个层级有软件正在播放，则所有下级音量降至各层级配置的目标音量
     /// </summary>
     public void ApplyVolumeRules()
     {
@@ -150,7 +175,7 @@ public class VolumeController : IDisposable
             // 先实时刷新所有追踪进程的播放状态
             foreach (var process in _trackedProcesses.Values)
             {
-                var state = _audioSessionService.GetProcessPlayingState(process.ProcessId);
+                var state = _audioSessionService.GetProcessPlayingState(process.ProcessId, process.DisplayName);
                 if (state.HasValue)
                 {
                     process.IsPlaying = state.Value;
@@ -159,50 +184,70 @@ public class VolumeController : IDisposable
 
             // 检查每个层级是否有进程正在播放
             var playingLevels = new HashSet<int>();
+            var playingLevelNames = new Dictionary<int, List<string>>();
             foreach (var process in _trackedProcesses.Values)
             {
                 if (process.IsPlaying)
                 {
                     playingLevels.Add(process.Level);
+                    if (!playingLevelNames.TryGetValue(process.Level, out var names))
+                    {
+                        names = new List<string>();
+                        playingLevelNames[process.Level] = names;
+                    }
+                    names.Add($"{process.DisplayName} [{process.ProcessName}]");
                 }
             }
 
-            System.Diagnostics.Debug.WriteLine(
-                $"[ApplyVolumeRules] 追踪进程: {_trackedProcesses.Count}, 播放中层级: [{string.Join(",", playingLevels)}]");
+
+            foreach (var kvp in playingLevelNames.OrderByDescending(k => k.Key))
+            {
+            }
 
             // 如果有上级正在播放，则下级需要被压制
             foreach (var process in _trackedProcesses.Values)
             {
-                bool shouldSuppress = false;
+                var suppressingLevels = new List<int>();
                 float targetVolume = process.OriginalVolume;
+                bool wasSuppressed = process.IsSuppressed;
 
                 foreach (var upperLevel in playingLevels)
                 {
                     // 层级数值越大优先级越高：0 > -1 > -2 > -3 > -4 > -5
                     if (upperLevel > process.Level)
                     {
-                        shouldSuppress = true;
-                        break;
+                        suppressingLevels.Add(upperLevel);
                     }
                 }
 
+                bool shouldSuppress = suppressingLevels.Count > 0;
+
                 if (shouldSuppress)
                 {
-                    // 找到对应的层级配置，获取压制比例
+                    // 找到对应的层级配置，获取目标音量（绝对值）
                     var levelConfig = levels.FirstOrDefault(l => l.Level == process.Level);
                     float suppressRatio = levelConfig?.SuppressVolumeRatio ?? 0.2f;
-                    targetVolume = process.OriginalVolume * suppressRatio;
+                    targetVolume = Math.Clamp(suppressRatio, 0.0f, 1.0f);
                 }
 
                 // 始终应用音量（移除阈值判断，确保每次都能生效）
-                process.CurrentVolume = targetVolume;
-                process.IsSuppressed = shouldSuppress;
-                bool success = _audioSessionService.SetProcessVolume(process.ProcessId, targetVolume);
+                bool success = true;
+                if (shouldSuppress)
+                {
+                    process.CurrentVolume = targetVolume;
+                    process.IsSuppressed = true;
+                    success = _audioSessionService.SetProcessVolume(process.ProcessId, targetVolume, process.DisplayName);
+                }
+                else
+                {
+                    process.IsSuppressed = false;
+                    if (wasSuppressed)
+                    {
+                        process.CurrentVolume = targetVolume;
+                        success = _audioSessionService.SetProcessVolume(process.ProcessId, targetVolume, process.DisplayName);
+                    }
+                }
 
-                System.Diagnostics.Debug.WriteLine(
-                    $"[ApplyVolumeRules] {process.ProcessName}(PID:{process.ProcessId}) " +
-                    $"层级:{process.Level} 播放:{process.IsPlaying} 压制:{shouldSuppress} " +
-                    $"音量:{targetVolume:P0} 设置{(success ? "成功" : "失败")}");
             }
         }
 
@@ -222,7 +267,7 @@ public class VolumeController : IDisposable
                 if (!process.IsSuppressed)
                 {
                     process.CurrentVolume = process.OriginalVolume;
-                    _audioSessionService.SetProcessVolume(processId, process.OriginalVolume);
+                    _audioSessionService.SetProcessVolume(processId, process.OriginalVolume, process.DisplayName);
                 }
             }
         }
@@ -276,9 +321,7 @@ public class VolumeController : IDisposable
                 int? matchedLevel = null;
                 foreach (var level in config.Levels)
                 {
-                    if (level.ProcessNames.Any(p =>
-                            process.ProcessName.Contains(p, StringComparison.OrdinalIgnoreCase) ||
-                            p.Contains(process.ProcessName, StringComparison.OrdinalIgnoreCase)))
+                    if (level.ProcessNames.Any(p => IsProcessMatch(process, p)))
                     {
                         matchedLevel = level.Level;
                         break;

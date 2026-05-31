@@ -239,7 +239,7 @@
                                                         Orientation="Horizontal"
                                                         VerticalAlignment="Center"
                                                         Margin="0,0,8,0">
-                                                <TextBlock Text="压制:"
+                                                <TextBlock Text="压制音量:"
                                                            FontSize="11"
                                                            Foreground="#666"
                                                            VerticalAlignment="Center"

@@ -23,6 +23,11 @@ public class AudioProcess
     public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>
+    /// 用于匹配配置的名称（优先显示名）
+    /// </summary>
+    public string MatchName { get; set; } = string.Empty;
+
+    /// <summary>
     /// 所属层级（数值越大优先级越高，0 为最高优先级）
     /// </summary>
     public int Level { get; set; }

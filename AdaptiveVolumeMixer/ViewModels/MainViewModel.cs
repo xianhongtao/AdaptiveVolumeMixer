@@ -142,6 +142,28 @@ public partial class MainViewModel : ObservableObject
     private bool CanStartMonitoring() => !IsMonitoring;
     private bool CanStopMonitoring() => IsMonitoring;
 
+    private static bool IsProcessMatch(AudioProcess session, string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return false;
+
+        if (session.ProcessName.Contains(token, StringComparison.OrdinalIgnoreCase) ||
+            token.Contains(session.ProcessName, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (!string.IsNullOrWhiteSpace(session.DisplayName) &&
+            (session.DisplayName.Contains(token, StringComparison.OrdinalIgnoreCase) ||
+             token.Contains(session.DisplayName, StringComparison.OrdinalIgnoreCase)))
+            return true;
+
+        if (!string.IsNullOrWhiteSpace(session.MatchName) &&
+            (session.MatchName.Contains(token, StringComparison.OrdinalIgnoreCase) ||
+             token.Contains(session.MatchName, StringComparison.OrdinalIgnoreCase)))
+            return true;
+
+        return false;
+    }
+
     /// <summary>
     /// 从层级移除进程
     /// </summary>
@@ -161,7 +183,10 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     public void AddProcessToLevel(AudioProcess process, int level)
     {
-        _volumeController.AddProcessToLevel(process.ProcessName, level);
+        var matchName = string.IsNullOrWhiteSpace(process.MatchName)
+            ? process.ProcessName
+            : process.MatchName;
+        _volumeController.AddProcessToLevel(matchName, level);
         RefreshLevelViews(); RefreshAvailableProcesses(); var levelVm = Levels.FirstOrDefault(l => l.Level == level);
         StatusText = $"已添加 {process.DisplayName} 到 {levelVm?.DisplayName ?? level.ToString()}";
     }
@@ -288,7 +313,7 @@ public partial class MainViewModel : ObservableObject
             {
                 // 查找该进程是否在追踪列表中
                 var tracked = _volumeController.TrackedProcesses.Values
-                    .FirstOrDefault(p => p.ProcessName.Equals(processName, StringComparison.OrdinalIgnoreCase));
+                    .FirstOrDefault(p => IsProcessMatch(p, processName));
 
                 levelVm.Processes.Add(new LevelItemViewModel
                 {

@@ -14,6 +14,24 @@ public class AudioSessionService : IDisposable
     private MMDevice? _defaultDevice;
     private NAudio.CoreAudioApi.AudioSessionManager? _sessionManager;
     private bool _disposed;
+    private const float PlaybackThreshold = 0.001f;
+
+    private static bool IsSessionPlaying(AudioSessionControl session)
+    {
+        try
+        {
+            if (session.AudioMeterInformation != null)
+            {
+                return session.AudioMeterInformation.MasterPeakValue > PlaybackThreshold;
+            }
+        }
+        catch
+        {
+            // ignore meter errors and fall back to state
+        }
+
+        return session.State == AudioSessionState.AudioSessionStateActive;
+    }
 
     /// <summary>
     /// 初始化音频会话管理器
@@ -69,18 +87,25 @@ public class AudioSessionService : IDisposable
                     {
                         var process = Process.GetProcessById(processId);
                         string processName = process.ProcessName;
+                        string processExeName = processName + ".exe";
                         string displayName = string.IsNullOrWhiteSpace(session.DisplayName)
                             ? processName
                             : session.DisplayName;
+                        string matchName = !string.IsNullOrWhiteSpace(displayName) &&
+                                           !displayName.Equals(processName, StringComparison.OrdinalIgnoreCase) &&
+                                           !displayName.Equals(processExeName, StringComparison.OrdinalIgnoreCase)
+                            ? displayName
+                            : processExeName;
 
                         var audioProcess = new AudioProcess
                         {
                             ProcessId = processId,
-                            ProcessName = processName + ".exe",
+                            ProcessName = processExeName,
                             DisplayName = displayName,
+                            MatchName = matchName,
                             CurrentVolume = session.SimpleAudioVolume.Volume,
                             OriginalVolume = session.SimpleAudioVolume.Volume,
-                            IsPlaying = session.State == AudioSessionState.AudioSessionStateActive,
+                            IsPlaying = IsSessionPlaying(session),
                         };
 
                         result.Add(audioProcess);
@@ -108,7 +133,7 @@ public class AudioSessionService : IDisposable
     /// <summary>
     /// 设置指定进程的音量
     /// </summary>
-    public bool SetProcessVolume(int processId, float volume)
+    public bool SetProcessVolume(int processId, float volume, string? displayName = null)
     {
         if (_sessionManager == null)
             return false;
@@ -119,6 +144,9 @@ public class AudioSessionService : IDisposable
             if (sessions == null)
                 return false;
 
+            bool anySet = false;
+            volume = Math.Clamp(volume, 0.0f, 1.0f);
+
             for (int i = 0; i < sessions.Count; i++)
             {
                 try
@@ -127,11 +155,15 @@ public class AudioSessionService : IDisposable
                     if (session == null)
                         continue;
 
-                    if ((int)session.GetProcessID == processId)
+                    bool matchesProcess = (int)session.GetProcessID == processId;
+                    bool matchesDisplay = !string.IsNullOrWhiteSpace(displayName) &&
+                                          !string.IsNullOrWhiteSpace(session.DisplayName) &&
+                                          session.DisplayName.Equals(displayName, StringComparison.OrdinalIgnoreCase);
+
+                    if (matchesProcess || matchesDisplay)
                     {
-                        volume = Math.Clamp(volume, 0.0f, 1.0f);
                         session.SimpleAudioVolume.Volume = volume;
-                        return true;
+                        anySet = true;
                     }
                 }
                 catch
@@ -139,6 +171,8 @@ public class AudioSessionService : IDisposable
                     continue;
                 }
             }
+
+            return anySet;
         }
         catch (Exception ex)
         {
@@ -151,7 +185,7 @@ public class AudioSessionService : IDisposable
     /// <summary>
     /// 获取指定进程的播放状态
     /// </summary>
-    public bool? GetProcessPlayingState(int processId)
+    public bool? GetProcessPlayingState(int processId, string? displayName = null)
     {
         if (_sessionManager == null)
             return null;
@@ -162,6 +196,8 @@ public class AudioSessionService : IDisposable
             if (sessions == null)
                 return null;
 
+            bool? matchedState = null;
+
             for (int i = 0; i < sessions.Count; i++)
             {
                 try
@@ -170,9 +206,17 @@ public class AudioSessionService : IDisposable
                     if (session == null)
                         continue;
 
-                    if ((int)session.GetProcessID == processId)
+                    bool matchesProcess = (int)session.GetProcessID == processId;
+                    bool matchesDisplay = !string.IsNullOrWhiteSpace(displayName) &&
+                                          !string.IsNullOrWhiteSpace(session.DisplayName) &&
+                                          session.DisplayName.Equals(displayName, StringComparison.OrdinalIgnoreCase);
+
+                    if (matchesProcess || matchesDisplay)
                     {
-                        return session.State == AudioSessionState.AudioSessionStateActive;
+                        bool isPlaying = IsSessionPlaying(session);
+                        if (isPlaying)
+                            return true;
+                        matchedState = false;
                     }
                 }
                 catch
@@ -180,6 +224,8 @@ public class AudioSessionService : IDisposable
                     continue;
                 }
             }
+
+            return matchedState;
         }
         catch
         {
