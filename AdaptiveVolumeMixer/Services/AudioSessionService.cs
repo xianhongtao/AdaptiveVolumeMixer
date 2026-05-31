@@ -46,6 +46,7 @@ public class AudioSessionService : IDisposable
 
         try
         {
+            _sessionManager.RefreshSessions();
             var sessions = _sessionManager.Sessions;
             if (sessions == null)
                 return result;
