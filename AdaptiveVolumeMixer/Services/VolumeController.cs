@@ -138,7 +138,7 @@ public class VolumeController : IDisposable
 
     /// <summary>
     /// 应用音量规则
-    /// 核心逻辑：如果某个层级有软件正在播放，则所有下级音量降至20%
+    /// 核心逻辑：如果某个层级有软件正在播放，则所有下级音量降至各层级配置的压制比例
     /// </summary>
     public void ApplyVolumeRules()
     {

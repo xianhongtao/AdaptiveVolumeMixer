@@ -23,7 +23,7 @@ public class AudioProcess
     public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>
-    /// 所属层级（0 到 -5）
+    /// 所属层级（数值越大优先级越高，0 为最高优先级）
     /// </summary>
     public int Level { get; set; }
 
