@@ -238,7 +238,8 @@
                                             <StackPanel Grid.Column="3"
                                                         Orientation="Horizontal"
                                                         VerticalAlignment="Center"
-                                                        Margin="0,0,8,0">
+                                                        Margin="0,0,8,0"
+                                                        Visibility="{Binding IsHighestPriority, Converter={StaticResource InverseBoolToVisibility}}">
                                                 <TextBlock Text="目标音量:"
                                                            FontSize="11"
                                                            Foreground="#666"
@@ -276,7 +277,8 @@
                                                     ToolTip="删除此层级"
                                                     VerticalAlignment="Center"
                                                     HorizontalAlignment="Right"
-                                                    Margin="0,0,4,0"/>
+                                                    Margin="0,0,4,0"
+                                                    Visibility="{Binding IsHighestPriority, Converter={StaticResource InverseBoolToVisibility}}"/>
                                         </Grid>
 
                                         <!-- 进程列表 -->

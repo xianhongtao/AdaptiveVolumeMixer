@@ -175,6 +175,7 @@ public partial class MainViewModel : ObservableObject
 
         _volumeController.RemoveProcessFromLevel(item.ProcessName, item.Level);
         RefreshLevelViews();
+        RefreshAvailableProcesses();
         StatusText = $"已从层级 {item.Level} 移除 {item.ProcessName}";
     }
 

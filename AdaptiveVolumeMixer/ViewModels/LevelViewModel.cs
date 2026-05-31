@@ -17,6 +17,11 @@ public partial class LevelViewModel : ObservableObject
     private int _level;
 
     /// <summary>
+    /// 是否为最高优先级层级（Level == 0）
+    /// </summary>
+    public bool IsHighestPriority => Level == 0;
+
+    /// <summary>
     /// 层级在列表中的 0-based 索引，用于颜色转换器
     /// </summary>
     [ObservableProperty]
@@ -51,6 +56,12 @@ public partial class LevelViewModel : ObservableObject
             ProcessCount = $"({Processes.Count} 个进程)";
             OnPropertyChanged(nameof(HasProcesses));
         };
+    }
+
+    partial void OnLevelChanged(int value)
+    {
+        OnPropertyChanged(nameof(IsHighestPriority));
+        PropertyUpdated?.Invoke(nameof(Level));
     }
 
     partial void OnDisplayNameChanged(string value)
