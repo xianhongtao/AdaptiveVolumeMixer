@@ -1,76 +1,76 @@
 name: Build and Release
 
 on:
-  push:
-    tags: ['v*']
-  workflow_dispatch:
+    push:
+        tags: ["v*"]
+    workflow_dispatch:
 
 permissions:
-  contents: write
+    contents: write
 
 jobs:
-  build:
-    runs-on: windows-latest
+    build:
+        runs-on: windows-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: "10.0.x"
 
-      - name: Extract version from tag
-        shell: pwsh
-        run: |
-          $version = "${{ github.ref }}" -replace '^refs/tags/v', ''
-          echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
-          Write-Host "Version: $version"
+            - name: Extract version from tag
+              shell: pwsh
+              run: |
+                  $version = "${{ github.ref }}" -replace '^refs/tags/v', ''
+                  echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+                  Write-Host "Version: $version"
 
-      - name: Publish self-contained (single-file exe)
-        shell: pwsh
-        run: |
-          dotnet publish AdaptiveVolumeMixer/AdaptiveVolumeMixer.csproj `
-            -c Release `
-            -r win-x64 `
-            --self-contained true `
-            -p:PublishSingleFile=true `
-            -p:IncludeNativeLibrariesForSelfExtract=true `
-            -p:Version=$env:VERSION `
-            -o publish/self-contained
+            - name: Publish self-contained (single-file exe)
+              shell: pwsh
+              run: |
+                  dotnet publish AdaptiveVolumeMixer/AdaptiveVolumeMixer.csproj `
+                    -c Release `
+                    -r win-x64 `
+                    --self-contained true `
+                    -p:PublishSingleFile=true `
+                    -p:IncludeNativeLibrariesForSelfExtract=true `
+                    -p:Version=$env:VERSION `
+                    -o publish/self-contained
 
-      - name: Zip self-contained
-        shell: pwsh
-        run: |
-          Compress-Archive `
-            -Path publish/self-contained/AdaptiveVolumeMixer.exe `
-            -DestinationPath "AdaptiveVolumeMixer-v$env:VERSION-win-x64-standalone.zip"
+            - name: Zip self-contained
+              shell: pwsh
+              run: |
+                  Compress-Archive `
+                    -Path publish/self-contained/AdaptiveVolumeMixer.exe `
+                    -DestinationPath "AdaptiveVolumeMixer-v$env:VERSION-win-x64-standalone.zip"
 
-      - name: Publish framework-dependent
-        shell: pwsh
-        run: |
-          dotnet publish AdaptiveVolumeMixer/AdaptiveVolumeMixer.csproj `
-            -c Release `
-            -r win-x64 `
-            --self-contained false `
-            -p:Version=$env:VERSION `
-            -o publish/framework-dependent
+            - name: Publish framework-dependent
+              shell: pwsh
+              run: |
+                  dotnet publish AdaptiveVolumeMixer/AdaptiveVolumeMixer.csproj `
+                    -c Release `
+                    -r win-x64 `
+                    --self-contained false `
+                    -p:Version=$env:VERSION `
+                    -o publish/framework-dependent
 
-      - name: Zip framework-dependent
-        shell: pwsh
-        run: |
-          Compress-Archive `
-            -Path publish/framework-dependent/* `
-            -DestinationPath "AdaptiveVolumeMixer-v$env:VERSION-win-x64-framework-dependent.zip"
+            - name: Zip framework-dependent
+              shell: pwsh
+              run: |
+                  Compress-Archive `
+                    -Path publish/framework-dependent/* `
+                    -DestinationPath "AdaptiveVolumeMixer-v$env:VERSION-win-x64-framework-dependent.zip"
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: "v${{ env.VERSION }}"
-          files: |
-            AdaptiveVolumeMixer-v${{ env.VERSION }}-win-x64-standalone.zip
-            AdaptiveVolumeMixer-v${{ env.VERSION }}-win-x64-framework-dependent.zip
-          generate_release_notes: true
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  name: "v${{ env.VERSION }}"
+                  files: |
+                      AdaptiveVolumeMixer-v${{ env.VERSION }}-win-x64-standalone.zip
+                      AdaptiveVolumeMixer-v${{ env.VERSION }}-win-x64-framework-dependent.zip
+                  generate_release_notes: true
