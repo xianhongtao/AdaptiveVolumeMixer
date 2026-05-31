@@ -417,6 +417,12 @@
                                                 <TextBlock Text="{Binding ProcessName}"
                                                            FontSize="11"
                                                            Foreground="#999"/>
+                                                <TextBlock Text=" PID:"
+                                                           FontSize="11"
+                                                           Foreground="#999"/>
+                                                <TextBlock Text="{Binding ProcessId}"
+                                                           FontSize="11"
+                                                           Foreground="#999"/>
                                                 <TextBlock Text=")"
                                                            FontSize="11"
                                                            Foreground="#999"/>

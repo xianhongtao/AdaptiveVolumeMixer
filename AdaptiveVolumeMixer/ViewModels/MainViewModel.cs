@@ -96,18 +96,25 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// 刷新可用进程列表
+    /// 刷新可用进程列表（排除已被追踪的进程，避免重复添加混淆）
     /// </summary>
     [RelayCommand]
     private void RefreshAvailableProcesses()
     {
         var sessions = _audioSessionService.GetAllAudioSessions();
+        var trackedPids = new HashSet<int>(_volumeController.TrackedProcesses.Keys);
         AvailableProcesses.Clear();
         foreach (var session in sessions.OrderBy(s => s.DisplayName))
         {
-            AvailableProcesses.Add(session);
+            if (!trackedPids.Contains(session.ProcessId))
+            {
+                AvailableProcesses.Add(session);
+            }
         }
-        StatusText = $"已发现 {sessions.Count} 个音频进程";
+        var untrackedCount = AvailableProcesses.Count;
+        StatusText = untrackedCount == sessions.Count
+            ? $"已发现 {sessions.Count} 个音频进程"
+            : $"已发现 {sessions.Count} 个音频进程（{untrackedCount} 个未管理）";
     }
 
     /// <summary>
@@ -155,8 +162,7 @@ public partial class MainViewModel : ObservableObject
     public void AddProcessToLevel(AudioProcess process, int level)
     {
         _volumeController.AddProcessToLevel(process.ProcessName, level);
-        RefreshLevelViews();
-        var levelVm = Levels.FirstOrDefault(l => l.Level == level);
+        RefreshLevelViews(); RefreshAvailableProcesses(); var levelVm = Levels.FirstOrDefault(l => l.Level == level);
         StatusText = $"已添加 {process.DisplayName} 到 {levelVm?.DisplayName ?? level.ToString()}";
     }
 
