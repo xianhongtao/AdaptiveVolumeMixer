@@ -8,7 +8,7 @@ namespace AdaptiveVolumeMixer.Services;
 /// </summary>
 public class VolumeController : IDisposable
 {
-    private readonly AudioSessionService _audioManager;
+    private readonly AudioSessionService _audioSessionService;
     private readonly ConfigManager _configManager;
     private readonly Dictionary<int, AudioProcess> _trackedProcesses = new();
     private readonly object _lock = new();
@@ -26,9 +26,9 @@ public class VolumeController : IDisposable
     /// </summary>
     public event Action? OnStateChanged;
 
-    public VolumeController(AudioSessionService audioManager, ConfigManager configManager)
+    public VolumeController(AudioSessionService audioSessionService, ConfigManager configManager)
     {
-        _audioManager = audioManager;
+        _audioSessionService = audioSessionService;
         _configManager = configManager;
     }
 
@@ -60,7 +60,7 @@ public class VolumeController : IDisposable
     public void RefreshProcesses()
     {
         var config = _configManager.Config;
-        var allSessions = _audioManager.GetAllAudioSessions();
+        var allSessions = _audioSessionService.GetAllAudioSessions();
 
         lock (_lock)
         {
@@ -150,7 +150,7 @@ public class VolumeController : IDisposable
             // 先实时刷新所有追踪进程的播放状态
             foreach (var process in _trackedProcesses.Values)
             {
-                var state = _audioManager.GetProcessPlayingState(process.ProcessId);
+                var state = _audioSessionService.GetProcessPlayingState(process.ProcessId);
                 if (state.HasValue)
                 {
                     process.IsPlaying = state.Value;
@@ -197,7 +197,7 @@ public class VolumeController : IDisposable
                 // 始终应用音量（移除阈值判断，确保每次都能生效）
                 process.CurrentVolume = targetVolume;
                 process.IsSuppressed = shouldSuppress;
-                bool success = _audioManager.SetProcessVolume(process.ProcessId, targetVolume);
+                bool success = _audioSessionService.SetProcessVolume(process.ProcessId, targetVolume);
 
                 System.Diagnostics.Debug.WriteLine(
                     $"[ApplyVolumeRules] {process.ProcessName}(PID:{process.ProcessId}) " +
@@ -222,7 +222,7 @@ public class VolumeController : IDisposable
                 if (!process.IsSuppressed)
                 {
                     process.CurrentVolume = process.OriginalVolume;
-                    _audioManager.SetProcessVolume(processId, process.OriginalVolume);
+                    _audioSessionService.SetProcessVolume(processId, process.OriginalVolume);
                 }
             }
         }
@@ -295,6 +295,6 @@ public class VolumeController : IDisposable
     public void Dispose()
     {
         Stop();
-        _audioManager.Dispose();
+        _audioSessionService.Dispose();
     }
 }

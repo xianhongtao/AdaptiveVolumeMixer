@@ -11,7 +11,7 @@ namespace AdaptiveVolumeMixer.ViewModels;
 /// </summary>
 public partial class MainViewModel : ObservableObject
 {
-    private readonly AudioSessionService _audioManager;
+    private readonly AudioSessionService _audioSessionService;
     private readonly VolumeController _volumeController;
     private readonly ConfigManager _configManager;
 
@@ -48,9 +48,9 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private AudioProcess? _selectedAvailableProcess;
 
-    public MainViewModel(AudioSessionService audioManager, VolumeController volumeController, ConfigManager configManager)
+    public MainViewModel(AudioSessionService audioSessionService, VolumeController volumeController, ConfigManager configManager)
     {
-        _audioManager = audioManager;
+        _audioSessionService = audioSessionService;
         _volumeController = volumeController;
         _configManager = configManager;
 
@@ -69,7 +69,7 @@ public partial class MainViewModel : ObservableObject
 
     private void InitializeAudio()
     {
-        bool success = _audioManager.Initialize();
+        bool success = _audioSessionService.Initialize();
         StatusText = success ? "音频系统初始化成功" : "音频系统初始化失败，请以管理员身份运行";
     }
 
@@ -101,7 +101,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void RefreshAvailableProcesses()
     {
-        var sessions = _audioManager.GetAllAudioSessions();
+        var sessions = _audioSessionService.GetAllAudioSessions();
         AvailableProcesses.Clear();
         foreach (var session in sessions.OrderBy(s => s.DisplayName))
         {
