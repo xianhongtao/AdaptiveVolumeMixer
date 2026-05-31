@@ -187,7 +187,10 @@ public partial class MainViewModel : ObservableObject
             ? process.ProcessName
             : process.MatchName;
         _volumeController.AddProcessToLevel(matchName, level);
-        RefreshLevelViews(); RefreshAvailableProcesses(); var levelVm = Levels.FirstOrDefault(l => l.Level == level);
+
+        RefreshLevelViews();
+        RefreshAvailableProcesses();
+        var levelVm = Levels.FirstOrDefault(l => l.Level == level);
         StatusText = $"已添加 {process.DisplayName} 到 {levelVm?.DisplayName ?? level.ToString()}";
     }
 
@@ -270,7 +273,7 @@ public partial class MainViewModel : ObservableObject
                 cfg.DisplayName.StartsWith("层级 ") ||
                 cfg.DisplayName == "新层级")
             {
-                cfg.DisplayName = i == 0 ? "层级 0 (最高优先级)" : $"层级 {cfg.Level}";
+                cfg.DisplayName = $"层级 {cfg.Level}";
             }
         }
 

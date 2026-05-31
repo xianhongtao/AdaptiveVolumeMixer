@@ -21,7 +21,7 @@ public class LevelConfig
     public List<string> ProcessNames { get; set; } = new();
 
     /// <summary>
-    /// 被上级压制时的目标音量（0-1，默认 20%）
+    /// 被上级压制时的目标音量（0-1，默认 0.2 = 20%）
     /// </summary>
     public float SuppressVolumeRatio { get; set; } = 0.2f;
 

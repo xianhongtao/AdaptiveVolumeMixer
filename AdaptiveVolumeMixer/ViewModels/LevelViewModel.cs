@@ -30,7 +30,7 @@ public partial class LevelViewModel : ObservableObject
     private float _suppressRatio = 0.2f;
 
     /// <summary>
-    /// 压制比例的百分比显示文本
+    /// 目标音量的百分比显示文本
     /// </summary>
     public string SuppressRatioPercent => $"{SuppressRatio:P0}";
 
@@ -39,11 +39,17 @@ public partial class LevelViewModel : ObservableObject
     [ObservableProperty]
     private string _processCount = "(0 个进程)";
 
+    /// <summary>
+    /// 是否有进程（用于控制空状态提示的显示）
+    /// </summary>
+    public bool HasProcesses => Processes.Count > 0;
+
     public LevelViewModel()
     {
         Processes.CollectionChanged += (_, _) =>
         {
             ProcessCount = $"({Processes.Count} 个进程)";
+            OnPropertyChanged(nameof(HasProcesses));
         };
     }
 

@@ -4,7 +4,7 @@ namespace AdaptiveVolumeMixer.Services;
 
 /// <summary>
 /// 音量控制核心逻辑
-/// 当上级软件开始播放时，将下级音量降低到指定比例
+/// 当上级软件开始播放时，将下级音量降低到指定目标音量
 /// </summary>
 public class VolumeController : IDisposable
 {
@@ -53,7 +53,6 @@ public class VolumeController : IDisposable
         _audioSessionService = audioSessionService;
         _configManager = configManager;
     }
-
 
     /// <summary>
     /// 启动监控
@@ -184,24 +183,12 @@ public class VolumeController : IDisposable
 
             // 检查每个层级是否有进程正在播放
             var playingLevels = new HashSet<int>();
-            var playingLevelNames = new Dictionary<int, List<string>>();
             foreach (var process in _trackedProcesses.Values)
             {
                 if (process.IsPlaying)
                 {
                     playingLevels.Add(process.Level);
-                    if (!playingLevelNames.TryGetValue(process.Level, out var names))
-                    {
-                        names = new List<string>();
-                        playingLevelNames[process.Level] = names;
-                    }
-                    names.Add($"{process.DisplayName} [{process.ProcessName}]");
                 }
-            }
-
-
-            foreach (var kvp in playingLevelNames.OrderByDescending(k => k.Key))
-            {
             }
 
             // 如果有上级正在播放，则下级需要被压制
@@ -224,19 +211,18 @@ public class VolumeController : IDisposable
 
                 if (shouldSuppress)
                 {
-                    // 找到对应的层级配置，获取目标音量（绝对值）
+                    // 找到对应的层级配置，获取目标音量（0-1）
                     var levelConfig = levels.FirstOrDefault(l => l.Level == process.Level);
                     float suppressRatio = levelConfig?.SuppressVolumeRatio ?? 0.2f;
                     targetVolume = Math.Clamp(suppressRatio, 0.0f, 1.0f);
                 }
 
                 // 始终应用音量（移除阈值判断，确保每次都能生效）
-                bool success = true;
                 if (shouldSuppress)
                 {
                     process.CurrentVolume = targetVolume;
                     process.IsSuppressed = true;
-                    success = _audioSessionService.SetProcessVolume(process.ProcessId, targetVolume, process.DisplayName);
+                    _audioSessionService.SetProcessVolume(process.ProcessId, targetVolume, process.DisplayName);
                 }
                 else
                 {
@@ -244,7 +230,7 @@ public class VolumeController : IDisposable
                     if (wasSuppressed)
                     {
                         process.CurrentVolume = targetVolume;
-                        success = _audioSessionService.SetProcessVolume(process.ProcessId, targetVolume, process.DisplayName);
+                        _audioSessionService.SetProcessVolume(process.ProcessId, targetVolume, process.DisplayName);
                     }
                 }
 

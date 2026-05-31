@@ -234,12 +234,12 @@
                                                        VerticalAlignment="Center"
                                                        Margin="4,0,8,0"/>
 
-                                            <!-- 压制比例滑块 -->
+                                            <!-- 目标音量滑块 -->
                                             <StackPanel Grid.Column="3"
                                                         Orientation="Horizontal"
                                                         VerticalAlignment="Center"
                                                         Margin="0,0,8,0">
-                                                <TextBlock Text="压制音量:"
+                                                <TextBlock Text="目标音量:"
                                                            FontSize="11"
                                                            Foreground="#666"
                                                            VerticalAlignment="Center"
@@ -372,7 +372,8 @@
                                                    FontSize="11"
                                                    Foreground="#BBB"
                                                    HorizontalAlignment="Center"
-                                                   Margin="0,0,0,8"/>
+                                                   Margin="0,0,0,8"
+                                                   Visibility="{Binding HasProcesses, Converter={StaticResource InverseBoolToVisibility}}"/>
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>
@@ -456,13 +457,13 @@
                                        Margin="0,0,0,4"/>
                             <TextBlock Text="2. 点击「启动监控」开始自动音量调节"
                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="3. 当上级软件播放声音时，下级音量按比例自动降低"
+                            <TextBlock Text="3. 当上级软件播放声音时，下级音量自动降低到目标音量"
                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="4. 层级0为最高优先级，越往下优先级越低"
+                            <TextBlock Text="4. 层级 0 为最高优先级，越往下优先级越低"
                                        Margin="0,0,0,4"/>
                             <TextBlock Text="5. 使用「添加/删除层级」按钮管理层级数量"
                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="6. 拖动滑块可调整每个层级的压制音量比例"
+                            <TextBlock Text="6. 拖动滑块可调整每个层级的目标音量"
                                        Margin="0,0,0,4"/>
                             <TextBlock Text="7. 点击层级名称可直接编辑"
                                        Margin="0,0,0,4"/>
