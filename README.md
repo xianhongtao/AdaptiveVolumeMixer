@@ -43,7 +43,6 @@
 
 - Windows 10/11
 - [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- **以管理员身份运行**（访问 Windows Core Audio API 需要管理员权限）
 
 ### 构建与运行
 
@@ -54,11 +53,11 @@ cd AdaptiveVolumeMixer
 # 构建
 dotnet build
 
-# 运行（以管理员身份）
+# 运行
 dotnet run --project AdaptiveVolumeMixer
 ```
 
-或在 Visual Studio 中打开 `AdaptiveVolumeMixer.sln`，右键"以管理员身份运行"后 F5 启动。
+或在 Visual Studio 中打开 `AdaptiveVolumeMixer.sln`，按 F5 启动。
 
 ## ⚙️ 配置
 
