@@ -1,7 +1,17 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
+using Application = System.Windows.Application;
+using Button = System.Windows.Controls.Button;
+using DataObject = System.Windows.DataObject;
+using DragDrop = System.Windows.DragDrop;
+using DragDropEffects = System.Windows.DragDropEffects;
+using DragEventArgs = System.Windows.DragEventArgs;
+using ListBox = System.Windows.Controls.ListBox;
+using MouseButtonEventArgs = System.Windows.Input.MouseButtonEventArgs;
+using MouseButtonState = System.Windows.Input.MouseButtonState;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+using Point = System.Windows.Point;
 using AdaptiveVolumeMixer.Models;
 using AdaptiveVolumeMixer.ViewModels;
 
@@ -12,10 +22,45 @@ namespace AdaptiveVolumeMixer;
 /// </summary>
 public partial class MainWindow : Window
 {
+    /// <summary>
+    /// 是否允许窗口真正关闭（由托盘"退出"菜单设置）
+    /// </summary>
+    public bool AllowClose { get; set; }
+
     public MainWindow(MainViewModel viewModel)
     {
         InitializeComponent();
         DataContext = viewModel;
+    }
+
+    /// <summary>
+    /// 窗口关闭时拦截：隐藏到托盘而非退出
+    /// </summary>
+    private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        if (AllowClose)
+        {
+            // 允许真正关闭（托盘"退出"触发）
+            AllowClose = false;
+            return;
+        }
+
+        // 取消关闭，改为隐藏到托盘
+        e.Cancel = true;
+        Hide();
+        (Application.Current as App)?.ShowMinimizeBalloonTip();
+    }
+
+    /// <summary>
+    /// 窗口最小化时隐藏到托盘
+    /// </summary>
+    private void MainWindow_StateChanged(object? sender, EventArgs e)
+    {
+        if (WindowState == WindowState.Minimized)
+        {
+            Hide();
+            (Application.Current as App)?.ShowMinimizeBalloonTip();
+        }
     }
 
     /// <summary>

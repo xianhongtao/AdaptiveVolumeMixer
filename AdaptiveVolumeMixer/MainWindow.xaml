@@ -12,6 +12,8 @@
         MinHeight="500"
         MinWidth="700"
         WindowStartupLocation="CenterScreen"
+        Closing="MainWindow_Closing"
+        StateChanged="MainWindow_StateChanged"
         FontFamily="Microsoft YaHei, Segoe UI">
 
     <Window.Resources>

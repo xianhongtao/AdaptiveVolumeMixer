@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Windows.Data;
-using System.Windows.Media;
+using Color = System.Windows.Media.Color;
+using SolidColorBrush = System.Windows.Media.SolidColorBrush;
 
 namespace AdaptiveVolumeMixer.Converters;
 
