@@ -53,6 +53,11 @@ public class AudioProcess
     public bool IsSuppressed { get; set; }
 
     /// <summary>
+    /// 格式化显示信息（用于可用进程列表）
+    /// </summary>
+    public string DisplayInfo => $"{DisplayName} ({ProcessName} PID:{ProcessId})";
+
+    /// <summary>
     /// 进程是否仍然存活
     /// </summary>
     public bool IsAlive

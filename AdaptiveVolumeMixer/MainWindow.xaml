@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:AdaptiveVolumeMixer.ViewModels"
+        xmlns:controls="clr-namespace:AdaptiveVolumeMixer.Controls"
         mc:Ignorable="d"
         x:Name="MainWindowRoot"
         Title="Adaptive Volume Mixer - 自适应音量合成器"
@@ -19,34 +20,6 @@
     <Window.Resources>
         <!-- 局部样式（仅 MainWindow 使用） -->
 
-        <Style x:Key="LevelHeaderStyle"
-               TargetType="TextBlock">
-            <Setter Property="FontSize"
-                    Value="16"/>
-            <Setter Property="FontWeight"
-                    Value="Bold"/>
-            <Setter Property="Margin"
-                    Value="10,8,0,8"/>
-            <Setter Property="Foreground"
-                    Value="{Binding LevelIndex, Converter={StaticResource LevelIndexToColor}}"/>
-        </Style>
-
-        <Style x:Key="ProcessItemStyle"
-               TargetType="Border">
-            <Setter Property="Background"
-                    Value="#F5F5F5"/>
-            <Setter Property="BorderBrush"
-                    Value="#E0E0E0"/>
-            <Setter Property="BorderThickness"
-                    Value="1"/>
-            <Setter Property="CornerRadius"
-                    Value="4"/>
-            <Setter Property="Margin"
-                    Value="4,2"/>
-            <Setter Property="Padding"
-                    Value="8,6"/>
-        </Style>
-
         <Style x:Key="SectionHeaderStyle"
                TargetType="TextBlock">
             <Setter Property="FontSize"
@@ -57,34 +30,6 @@
                     Value="#333333"/>
             <Setter Property="Margin"
                     Value="0,10,0,5"/>
-        </Style>
-
-        <!-- 拖拽悬停时层级边框高亮 -->
-        <Style x:Key="LevelDropTargetStyle"
-               TargetType="Border">
-            <Setter Property="Background"
-                    Value="#FAFAFA"/>
-            <Setter Property="CornerRadius"
-                    Value="6"/>
-            <Setter Property="Margin"
-                    Value="0,0,0,8"/>
-            <Setter Property="Padding"
-                    Value="0"/>
-            <Setter Property="BorderBrush"
-                    Value="#E0E0E0"/>
-            <Setter Property="BorderThickness"
-                    Value="1"/>
-            <Style.Triggers>
-                <Trigger Property="Tag"
-                         Value="DragOver">
-                    <Setter Property="BorderBrush"
-                            Value="#2196F3"/>
-                    <Setter Property="BorderThickness"
-                            Value="2"/>
-                    <Setter Property="Background"
-                            Value="#E3F2FD"/>
-                </Trigger>
-            </Style.Triggers>
         </Style>
     </Window.Resources>
 
@@ -143,29 +88,21 @@
                     <Button Content="▶ 启动监控"
                             Command="{Binding StartMonitoringCommand}"
                             Background="#4CAF50"
-                            Foreground="White"
-                            Padding="12,6"
-                            Margin="0,0,6,0"
+                            Style="{StaticResource ToolbarButtonStyle}"
                             Visibility="{Binding IsNotMonitoring, Converter={StaticResource BoolToVisibility}}"/>
                     <Button Content="⏹ 停止监控"
                             Command="{Binding StopMonitoringCommand}"
                             Background="#F44336"
-                            Foreground="White"
-                            Padding="12,6"
-                            Margin="0,0,6,0"
+                            Style="{StaticResource ToolbarButtonStyle}"
                             Visibility="{Binding IsMonitoring, Converter={StaticResource BoolToVisibility}}"/>
                     <Button Content="🔄 刷新进程"
                             Command="{Binding RefreshAvailableProcessesCommand}"
                             Background="#2196F3"
-                            Foreground="White"
-                            Padding="12,6"
-                            Margin="0,0,6,0"/>
+                            Style="{StaticResource ToolbarButtonStyle}"/>
                     <Button Content="➕ 添加层级"
                             Command="{Binding AddLevelCommand}"
                             Background="#9C27B0"
-                            Foreground="White"
-                            Padding="12,6"
-                            Margin="0,0,6,0"/>
+                            Style="{StaticResource ToolbarButtonStyle}"/>
                     <Button Content="💾 保存配置"
                             Command="{Binding SaveConfigCommand}"
                             Background="#607D8B"
@@ -192,194 +129,7 @@
                     <ItemsControl ItemsSource="{Binding Levels}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="vm:LevelViewModel">
-                                <Border Style="{StaticResource LevelDropTargetStyle}"
-                                        AllowDrop="True"
-                                        DragEnter="LevelBorder_DragEnter"
-                                        DragOver="LevelBorder_DragOver"
-                                        DragLeave="LevelBorder_DragLeave"
-                                        Drop="LevelBorder_Drop">
-                                    <StackPanel>
-                                        <!-- 层级标题 -->
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-
-                                            <!-- 颜色条 -->
-                                            <Border Grid.Column="0"
-                                                    Width="8"
-                                                    CornerRadius="6,0,0,0"
-                                                    Background="{Binding LevelIndex, Converter={StaticResource LevelIndexToColor}}"/>
-
-                                            <!-- 可编辑的显示名称 -->
-                                            <TextBox Grid.Column="1"
-                                                     Text="{Binding DisplayName, UpdateSourceTrigger=PropertyChanged}"
-                                                     FontSize="16"
-                                                     FontWeight="Bold"
-                                                     BorderThickness="0"
-                                                     Background="Transparent"
-                                                     Foreground="{Binding LevelIndex, Converter={StaticResource LevelIndexToColor}}"
-                                                     VerticalAlignment="Center"
-                                                     Margin="10,8,0,8"
-                                                     MinWidth="80"/>
-
-                                            <!-- 进程计数 -->
-                                            <TextBlock Grid.Column="2"
-                                                       Text="{Binding ProcessCount}"
-                                                       FontSize="11"
-                                                       Foreground="#999"
-                                                       VerticalAlignment="Center"
-                                                       Margin="4,0,8,0"/>
-
-                                            <!-- 目标音量滑块 -->
-                                            <StackPanel Grid.Column="3"
-                                                        Orientation="Horizontal"
-                                                        VerticalAlignment="Center"
-                                                        Margin="0,0,8,0"
-                                                        Visibility="{Binding IsHighestPriority, Converter={StaticResource InverseBoolToVisibility}}">
-                                                <TextBlock Text="目标音量:"
-                                                           FontSize="11"
-                                                           Foreground="#666"
-                                                           VerticalAlignment="Center"
-                                                           Margin="0,0,4,0"/>
-                                                <Slider Value="{Binding SuppressRatio}"
-                                                        Minimum="0"
-                                                        Maximum="1"
-                                                        SmallChange="0.05"
-                                                        LargeChange="0.1"
-                                                        TickFrequency="0.05"
-                                                        IsSnapToTickEnabled="True"
-                                                        Width="100"
-                                                        VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding SuppressRatioPercent}"
-                                                           FontSize="11"
-                                                           FontWeight="SemiBold"
-                                                           Foreground="#555"
-                                                           VerticalAlignment="Center"
-                                                           Margin="6,0,0,0"
-                                                           MinWidth="30"/>
-                                            </StackPanel>
-
-                                            <!-- 删除层级按钮 -->
-                                            <Button Grid.Column="4"
-                                                    Content="✕"
-                                                    Command="{Binding DataContext.RemoveLevelCommand, ElementName=MainWindowRoot}"
-                                                    CommandParameter="{Binding}"
-                                                    Background="Transparent"
-                                                    Foreground="#F44336"
-                                                    BorderThickness="0"
-                                                    FontSize="14"
-                                                    Width="24"
-                                                    Height="24"
-                                                    ToolTip="删除此层级"
-                                                    VerticalAlignment="Center"
-                                                    HorizontalAlignment="Right"
-                                                    Margin="0,0,4,0"
-                                                    Visibility="{Binding IsHighestPriority, Converter={StaticResource InverseBoolToVisibility}}"/>
-                                        </Grid>
-
-                                        <!-- 进程列表 -->
-                                        <ItemsControl ItemsSource="{Binding Processes}"
-                                                      Margin="8,0,8,8">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate DataType="vm:LevelItemViewModel">
-                                                    <Border Style="{StaticResource ProcessItemStyle}">
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="*"/>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                            </Grid.ColumnDefinitions>
-
-                                                            <!-- 进程名 -->
-                                                            <StackPanel Grid.Column="0"
-                                                                        Orientation="Horizontal">
-                                                                <TextBlock Text="{Binding DisplayName}"
-                                                                           FontWeight="Medium"
-                                                                           FontSize="13"/>
-                                                                <TextBlock Text=" ("
-                                                                           FontSize="11"
-                                                                           Foreground="#999"/>
-                                                                <TextBlock Text="{Binding ProcessName}"
-                                                                           FontSize="11"
-                                                                           Foreground="#999"/>
-                                                                <TextBlock Text=")"
-                                                                           FontSize="11"
-                                                                           Foreground="#999"/>
-                                                            </StackPanel>
-
-                                                            <!-- 音量 -->
-                                                            <TextBlock Grid.Column="1"
-                                                                       Text="{Binding VolumeText}"
-                                                                       FontSize="12"
-                                                                       FontWeight="Bold"
-                                                                       Foreground="#333"
-                                                                       Margin="10,0,8,0"
-                                                                       VerticalAlignment="Center"/>
-
-                                                            <!-- 状态 -->
-                                                            <TextBlock Grid.Column="2"
-                                                                       Text="{Binding StatusText}"
-                                                                       FontSize="11"
-                                                                       Margin="0,0,8,0"
-                                                                       VerticalAlignment="Center">
-                                                                <TextBlock.Style>
-                                                                    <Style TargetType="TextBlock">
-                                                                        <Setter Property="Foreground"
-                                                                                Value="{StaticResource IdleColor}"/>
-                                                                        <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding IsPlaying}"
-                                                                                         Value="True">
-                                                                                <Setter Property="Foreground"
-                                                                                        Value="{StaticResource PlayingColor}"/>
-                                                                            </DataTrigger>
-                                                                            <DataTrigger Binding="{Binding IsSuppressed}"
-                                                                                         Value="True">
-                                                                                <Setter Property="Foreground"
-                                                                                        Value="{StaticResource SuppressedColor}"/>
-                                                                            </DataTrigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </TextBlock.Style>
-                                                            </TextBlock>
-
-                                                            <!-- 删除按钮 -->
-                                                            <Button Grid.Column="3"
-                                                                    Content="✕"
-                                                                    Tag="{Binding}"
-                                                                    Click="RemoveProcessButton_Click"
-                                                                    Background="Transparent"
-                                                                    Foreground="#F44336"
-                                                                    BorderThickness="0"
-                                                                    FontSize="14"
-                                                                    Width="24"
-                                                                    Height="24"/>
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <StackPanel/>
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                        </ItemsControl>
-
-                                        <!-- 空状态 -->
-                                        <TextBlock Text="（暂无进程，请从右侧拖拽添加）"
-                                                   FontSize="11"
-                                                   Foreground="#BBB"
-                                                   HorizontalAlignment="Center"
-                                                   Margin="0,0,0,8"
-                                                   Visibility="{Binding HasProcesses, Converter={StaticResource InverseBoolToVisibility}}"/>
-                                    </StackPanel>
-                                </Border>
+                                <controls:LevelItemControl/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -413,32 +163,14 @@
                                          PreviewMouseMove="AvailableProcessListBox_PreviewMouseMove">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding DisplayName}"
-                                                           FontWeight="Medium"/>
-                                                <TextBlock Text=" ("
-                                                           FontSize="11"
-                                                           Foreground="#999"/>
-                                                <TextBlock Text="{Binding ProcessName}"
-                                                           FontSize="11"
-                                                           Foreground="#999"/>
-                                                <TextBlock Text=" PID:"
-                                                           FontSize="11"
-                                                           Foreground="#999"/>
-                                                <TextBlock Text="{Binding ProcessId}"
-                                                           FontSize="11"
-                                                           Foreground="#999"/>
-                                                <TextBlock Text=")"
-                                                           FontSize="11"
-                                                           Foreground="#999"/>
-                                            </StackPanel>
+                                            <TextBlock Text="{Binding DisplayInfo}"
+                                                       FontWeight="Medium"/>
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
 
                                 <TextBlock Text="💡 拖拽上方进程到左侧层级即可添加"
-                                           FontSize="11"
-                                           Foreground="#999"
+                                           Style="{StaticResource ThinMutedStyle}"
                                            HorizontalAlignment="Center"
                                            Margin="0,4,0,0"/>
                             </StackPanel>
@@ -497,21 +229,17 @@
                            Margin="0,0,6,0"/>
                 <TextBlock Grid.Column="1"
                            Text="{Binding StatusText}"
-                           FontSize="11"
-                           Foreground="#666"
+                           Style="{StaticResource ThinSecondaryStyle}"
                            VerticalAlignment="Center"/>
                 <StackPanel Grid.Column="2"
                             Orientation="Horizontal"
                             VerticalAlignment="Center">
                     <TextBlock Text="层级: "
-                               FontSize="11"
-                               Foreground="#999"/>
+                               Style="{StaticResource ThinMutedStyle}"/>
                     <TextBlock Text="{Binding Levels.Count}"
-                               FontSize="11"
-                               Foreground="#999"/>
+                               Style="{StaticResource ThinMutedStyle}"/>
                     <TextBlock Text=" | 监控: "
-                               FontSize="11"
-                               Foreground="#999"/>
+                               Style="{StaticResource ThinMutedStyle}"/>
                     <TextBlock FontSize="11"
                                Foreground="#999">
                         <TextBlock.Style>

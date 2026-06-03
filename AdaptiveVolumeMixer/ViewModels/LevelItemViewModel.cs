@@ -31,6 +31,11 @@ public partial class LevelItemViewModel : ObservableObject
     [ObservableProperty]
     private float _originalVolume;
 
+    /// <summary>
+    /// 格式化显示名称（DisplayName + ProcessName）
+    /// </summary>
+    public string FullDisplayName => $"{DisplayName} ({ProcessName})";
+
     public string VolumeText => $"{CurrentVolume:P0}";
     public string StatusText => IsPlaying ? "🔊 播放中" : (IsSuppressed ? "🔇 被压制" : "🔈 静默");
 }

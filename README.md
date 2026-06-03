@@ -113,15 +113,18 @@ AdaptiveVolumeMixer/
 │   ├── MainViewModel.cs          # 主界面 ViewModel（监控启停、层级增删、进程分配、配置保存）
 │   ├── LevelViewModel.cs         # 层级 ViewModel（可编辑名称、目标音量滑块、进程计数）
 │   └── LevelItemViewModel.cs     # 层级内进程项 ViewModel（播放状态、当前音量）
+├── Controls/
+│   ├── LevelItemControl.xaml     # 层级项用户控件（标题栏 + 进程列表 + 空状态）
+│   └── LevelItemControl.xaml.cs  # 层级项交互逻辑（进程删除、拖拽放置）
 ├── Converters/
 │   ├── BoolToVisibilityConverter.cs         # bool → Visibility（true=Visible）
 │   ├── InverseBoolToVisibilityConverter.cs  # bool → Visibility（true=Collapsed）
 │   ├── LevelIndexToColorBrushConverter.cs   # 层级索引 → 颜色画刷（10 色调色板）
 │   └── NullToBoolConverter.cs               # 非空值 → bool
-├── MainWindow.xaml               # 主窗口 XAML 布局
-├── MainWindow.xaml.cs            # 主窗口交互逻辑（拖拽启动检测、Drop 事件处理）
-├── App.xaml                      # 应用资源（全局转换器、状态颜色画笔）
-└── App.xaml.cs                   # 应用入口（DI 容器初始化、服务注册）
+├── MainWindow.xaml               # 主窗口 XAML 布局（工具栏 + 左右分栏 + 状态栏）
+├── MainWindow.xaml.cs            # 主窗口交互逻辑（窗口关闭/最小化托盘、拖拽源检测）
+├── App.xaml                      # 应用全局资源（转换器、颜色画笔、共享样式）
+└── App.xaml.cs                   # 应用入口（DI 容器初始化、系统托盘、服务注册）
 ```
 
 ### 核心类关系
@@ -137,7 +140,8 @@ App.xaml.cs (DI Container)
   │     │     └── Processes (ObservableCollection<LevelItemViewModel>)
   │     └── AvailableProcesses (ObservableCollection<AudioProcess>)
   └── MainWindow           ──→  MainViewModel (DataContext)
-        ├── 左侧：层级列表 + 进程项（拖拽放置目标）
+        ├── 左侧：层级列表（ItemsControl → LevelItemControl）
+        │     └── LevelItemControl（拖拽放置目标 + 进程列表 + 删除按钮）
         └── 右侧：可用进程列表（拖拽源） + 使用说明
 ```
 
