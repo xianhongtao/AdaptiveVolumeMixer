@@ -38,6 +38,7 @@ public partial class MainViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsNotMonitoring))]
     [NotifyCanExecuteChangedFor(nameof(StartMonitoringCommand))]
     [NotifyCanExecuteChangedFor(nameof(StopMonitoringCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RemoveLevelCommand))]
     private bool _isMonitoring;
 
     public bool IsNotMonitoring => !IsMonitoring;
@@ -251,7 +252,7 @@ public partial class MainViewModel : ObservableObject
         StatusText = LocalizationManager.Instance.GetString("Status.LevelRemoved", removedName);
     }
 
-    private bool CanRemoveLevel => Levels.Count > 1;
+    private bool CanRemoveLevel => Levels.Count > 1 && !IsMonitoring;
 
     /// <summary>
     /// 按列表位置重新编号所有层级（索引 0 → Level 0，索引 N → Level -N）
