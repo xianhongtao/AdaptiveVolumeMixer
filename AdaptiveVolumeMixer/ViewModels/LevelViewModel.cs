@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using AdaptiveVolumeMixer.Services;
 
 namespace AdaptiveVolumeMixer.ViewModels;
 
@@ -42,7 +43,7 @@ public partial class LevelViewModel : ObservableObject
     public ObservableCollection<LevelItemViewModel> Processes { get; } = [];
 
     [ObservableProperty]
-    private string _processCount = "(0 个进程)";
+    private string _processCount = LocalizationManager.Instance.GetString("Status.ProcessCount", 0);
 
     /// <summary>
     /// 是否有进程（用于控制空状态提示的显示）
@@ -53,7 +54,7 @@ public partial class LevelViewModel : ObservableObject
     {
         Processes.CollectionChanged += (_, _) =>
         {
-            ProcessCount = $"({Processes.Count} 个进程)";
+            ProcessCount = LocalizationManager.Instance.GetString("Status.ProcessCount", Processes.Count);
             OnPropertyChanged(nameof(HasProcesses));
         };
     }

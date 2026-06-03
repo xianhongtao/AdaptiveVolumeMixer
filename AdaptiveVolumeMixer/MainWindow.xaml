@@ -5,9 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:AdaptiveVolumeMixer.ViewModels"
         xmlns:controls="clr-namespace:AdaptiveVolumeMixer.Controls"
+        xmlns:l="clr-namespace:AdaptiveVolumeMixer.Converters"
         mc:Ignorable="d"
         x:Name="MainWindowRoot"
-        Title="Adaptive Volume Mixer - 自适应音量合成器"
+        Title="{l:Loc Window.Title}"
         Height="700"
         Width="950"
         MinHeight="500"
@@ -61,11 +62,11 @@
                                FontSize="24"
                                Margin="0,0,8,0"/>
                     <StackPanel>
-                        <TextBlock Text="Adaptive Volume Mixer"
+                        <TextBlock Text="{l:Loc App.Title}"
                                    FontSize="18"
                                    FontWeight="Bold"
                                    Foreground="#1A237E"/>
-                        <TextBlock Text="自适应音量合成器"
+                        <TextBlock Text="{l:Loc App.Subtitle}"
                                    FontSize="11"
                                    Foreground="#666"/>
                     </StackPanel>
@@ -85,25 +86,25 @@
                 <!-- 控制按钮 -->
                 <StackPanel Grid.Column="2"
                             Orientation="Horizontal">
-                    <Button Content="▶ 启动监控"
+                    <Button Content="{l:Loc Button.StartMonitoring}"
                             Command="{Binding StartMonitoringCommand}"
                             Background="#4CAF50"
                             Style="{StaticResource ToolbarButtonStyle}"
                             Visibility="{Binding IsNotMonitoring, Converter={StaticResource BoolToVisibility}}"/>
-                    <Button Content="⏹ 停止监控"
+                    <Button Content="{l:Loc Button.StopMonitoring}"
                             Command="{Binding StopMonitoringCommand}"
                             Background="#F44336"
                             Style="{StaticResource ToolbarButtonStyle}"
                             Visibility="{Binding IsMonitoring, Converter={StaticResource BoolToVisibility}}"/>
-                    <Button Content="🔄 刷新进程"
+                    <Button Content="{l:Loc Button.RefreshProcesses}"
                             Command="{Binding RefreshAvailableProcessesCommand}"
                             Background="#2196F3"
                             Style="{StaticResource ToolbarButtonStyle}"/>
-                    <Button Content="➕ 添加层级"
+                    <Button Content="{l:Loc Button.AddLevel}"
                             Command="{Binding AddLevelCommand}"
                             Background="#9C27B0"
                             Style="{StaticResource ToolbarButtonStyle}"/>
-                    <Button Content="💾 保存配置"
+                    <Button Content="{l:Loc Button.SaveConfig}"
                             Command="{Binding SaveConfigCommand}"
                             Background="#607D8B"
                             Foreground="White"
@@ -123,7 +124,7 @@
             <ScrollViewer Grid.Column="0"
                           Margin="0,0,8,0">
                 <StackPanel>
-                    <TextBlock Text="📊 层级管理"
+                    <TextBlock Text="{l:Loc Section.LevelManagement}"
                                Style="{StaticResource SectionHeaderStyle}"/>
 
                     <ItemsControl ItemsSource="{Binding Levels}">
@@ -147,7 +148,7 @@
                 <ScrollViewer Grid.Row="0"
                               VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <TextBlock Text="🎯 可用音频进程"
+                        <TextBlock Text="{l:Loc Section.AvailableProcesses}"
                                    Style="{StaticResource SectionHeaderStyle}"/>
                         <Border Background="#FAFAFA"
                                 CornerRadius="6"
@@ -169,7 +170,7 @@
                                     </ListBox.ItemTemplate>
                                 </ListBox>
 
-                                <TextBlock Text="💡 拖拽上方进程到左侧层级即可添加"
+                                <TextBlock Text="{l:Loc Hint.DragToAdd}"
                                            Style="{StaticResource ThinMutedStyle}"
                                            HorizontalAlignment="Center"
                                            Margin="0,4,0,0"/>
@@ -180,7 +181,7 @@
 
                 <!-- 使用说明（固定在底部） -->
                 <StackPanel Grid.Row="1">
-                    <TextBlock Text="ℹ️ 使用说明"
+                    <TextBlock Text="{l:Loc Section.Instructions}"
                                Style="{StaticResource SectionHeaderStyle}"/>
                     <Border Background="#FFF8E1"
                             CornerRadius="6"
@@ -189,21 +190,21 @@
                             BorderThickness="1">
                         <StackPanel TextBlock.FontSize="11"
                                     TextBlock.Foreground="#666">
-                            <TextBlock Text="1. 从右侧「可用音频进程」拖拽到左侧层级即可添加"
+                            <TextBlock Text="{l:Loc Instruction.1}"
                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="2. 点击「启动监控」开始自动音量调节"
+                            <TextBlock Text="{l:Loc Instruction.2}"
                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="3. 当上级软件播放声音时，下级音量自动降低到目标音量"
+                            <TextBlock Text="{l:Loc Instruction.3}"
                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="4. 层级 0 为最高优先级，越往下优先级越低"
+                            <TextBlock Text="{l:Loc Instruction.4}"
                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="5. 使用「添加/删除层级」按钮管理层级数量"
+                            <TextBlock Text="{l:Loc Instruction.5}"
                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="6. 拖动滑块可调整每个层级的目标音量"
+                            <TextBlock Text="{l:Loc Instruction.6}"
                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="7. 点击层级名称可直接编辑"
+                            <TextBlock Text="{l:Loc Instruction.7}"
                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="8. 配置会自动保存到 config.json"/>
+                            <TextBlock Text="{l:Loc Instruction.8}"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -234,23 +235,23 @@
                 <StackPanel Grid.Column="2"
                             Orientation="Horizontal"
                             VerticalAlignment="Center">
-                    <TextBlock Text="层级: "
+                    <TextBlock Text="{l:Loc Label.LevelCount}"
                                Style="{StaticResource ThinMutedStyle}"/>
                     <TextBlock Text="{Binding Levels.Count}"
                                Style="{StaticResource ThinMutedStyle}"/>
-                    <TextBlock Text=" | 监控: "
+                    <TextBlock Text="{l:Loc Label.Monitoring}"
                                Style="{StaticResource ThinMutedStyle}"/>
                     <TextBlock FontSize="11"
                                Foreground="#999">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Text"
-                                        Value="运行中"/>
+                                        Value="{l:Loc Status.Running}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsMonitoring}"
                                                  Value="False">
                                         <Setter Property="Text"
-                                                Value="已停止"/>
+                                                Value="{l:Loc Status.Stopped}"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>

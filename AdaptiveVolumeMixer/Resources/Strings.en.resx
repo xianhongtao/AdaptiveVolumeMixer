@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Window.Title" xml:space="preserve">
+    <value>Adaptive Volume Mixer</value>
+  </data>
+  <data name="App.Title" xml:space="preserve">
+    <value>Adaptive Volume Mixer</value>
+  </data>
+  <data name="App.Subtitle" xml:space="preserve">
+    <value>Adaptive Volume Mixer</value>
+  </data>
+  <data name="Button.StartMonitoring" xml:space="preserve">
+    <value>▶ Start Monitoring</value>
+  </data>
+  <data name="Button.StopMonitoring" xml:space="preserve">
+    <value>⏹ Stop Monitoring</value>
+  </data>
+  <data name="Button.RefreshProcesses" xml:space="preserve">
+    <value>🔄 Refresh Processes</value>
+  </data>
+  <data name="Button.AddLevel" xml:space="preserve">
+    <value>➕ Add Level</value>
+  </data>
+  <data name="Button.SaveConfig" xml:space="preserve">
+    <value>💾 Save Config</value>
+  </data>
+  <data name="Section.LevelManagement" xml:space="preserve">
+    <value>📊 Level Management</value>
+  </data>
+  <data name="Section.AvailableProcesses" xml:space="preserve">
+    <value>🎯 Available Audio Processes</value>
+  </data>
+  <data name="Section.Instructions" xml:space="preserve">
+    <value>ℹ️ Instructions</value>
+  </data>
+  <data name="Hint.DragToAdd" xml:space="preserve">
+    <value>💡 Drag processes from above to a level on the left</value>
+  </data>
+  <data name="Instruction.1" xml:space="preserve">
+    <value>1. Drag from "Available Audio Processes" to a level on the left</value>
+  </data>
+  <data name="Instruction.2" xml:space="preserve">
+    <value>2. Click "Start Monitoring" to begin auto volume adjustment</value>
+  </data>
+  <data name="Instruction.3" xml:space="preserve">
+    <value>3. Lower-level volume is reduced to target when a higher-level app plays sound</value>
+  </data>
+  <data name="Instruction.4" xml:space="preserve">
+    <value>4. Level 0 has the highest priority; lower levels have lower priority</value>
+  </data>
+  <data name="Instruction.5" xml:space="preserve">
+    <value>5. Use "Add/Delete Level" buttons to manage levels</value>
+  </data>
+  <data name="Instruction.6" xml:space="preserve">
+    <value>6. Adjust target volume for each level using the slider</value>
+  </data>
+  <data name="Instruction.7" xml:space="preserve">
+    <value>7. Click level name to edit directly</value>
+  </data>
+  <data name="Instruction.8" xml:space="preserve">
+    <value>8. Configuration auto-saves to config.json</value>
+  </data>
+  <data name="Label.TargetVolume" xml:space="preserve">
+    <value>Target Volume:</value>
+  </data>
+  <data name="Tooltip.DeleteLevel" xml:space="preserve">
+    <value>Delete this level</value>
+  </data>
+  <data name="Status.Ready" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="Status.AudioInitSuccess" xml:space="preserve">
+    <value>Audio system initialized successfully</value>
+  </data>
+  <data name="Status.AudioInitFailed" xml:space="preserve">
+    <value>Audio init failed, please run as administrator</value>
+  </data>
+  <data name="Status.FoundProcesses" xml:space="preserve">
+    <value>Found {0} audio processes</value>
+  </data>
+  <data name="Status.FoundProcessesUnmanaged" xml:space="preserve">
+    <value>Found {0} audio processes ({1} unmanaged)</value>
+  </data>
+  <data name="Status.MonitoringStarted" xml:space="preserve">
+    <value>Monitoring started</value>
+  </data>
+  <data name="Status.MonitoringStopped" xml:space="preserve">
+    <value>Monitoring stopped</value>
+  </data>
+  <data name="Status.ConfigSaved" xml:space="preserve">
+    <value>Configuration saved</value>
+  </data>
+  <data name="Status.LevelAdded" xml:space="preserve">
+    <value>New level added</value>
+  </data>
+  <data name="Status.ProcessRemoved" xml:space="preserve">
+    <value>Removed {1} from level {0}</value>
+  </data>
+  <data name="Status.ProcessAdded" xml:space="preserve">
+    <value>Added {0} to {1}</value>
+  </data>
+  <data name="Status.LevelRemoved" xml:space="preserve">
+    <value>Removed {0}</value>
+  </data>
+  <data name="Status.ProcessCount" xml:space="preserve">
+    <value>({0} processes)</value>
+  </data>
+  <data name="Status.Playing" xml:space="preserve">
+    <value>🔊 Playing</value>
+  </data>
+  <data name="Status.Suppressed" xml:space="preserve">
+    <value>🔇 Suppressed</value>
+  </data>
+  <data name="Status.Silent" xml:space="preserve">
+    <value>🔈 Silent</value>
+  </data>
+  <data name="Level.NewLevel" xml:space="preserve">
+    <value>New Level</value>
+  </data>
+  <data name="Default.LevelName" xml:space="preserve">
+    <value>Level {0}</value>
+  </data>
+  <data name="Tray.ShowWindow" xml:space="preserve">
+    <value>Show Window(&amp;S)</value>
+  </data>
+  <data name="Tray.Exit" xml:space="preserve">
+    <value>Exit(&amp;X)</value>
+  </data>
+  <data name="Tray.BalloonTitle" xml:space="preserve">
+    <value>Adaptive Volume Mixer</value>
+  </data>
+  <data name="Tray.BalloonText" xml:space="preserve">
+    <value>Minimized to system tray. Double-click icon to restore.</value>
+  </data>
+  <data name="Label.LevelCount" xml:space="preserve">
+    <value>Levels: </value>
+  </data>
+  <data name="Label.Monitoring" xml:space="preserve">
+    <value> | Monitoring: </value>
+  </data>
+  <data name="Status.Running" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="Status.Stopped" xml:space="preserve">
+    <value>Stopped</value>
+  </data>
+  <data name="Hint.NoProcesses" xml:space="preserve">
+    <value>(No processes, drag from the right panel)</value>
+  </data>
+  <data name="AudioProcess.Level" xml:space="preserve">
+    <value>Level {0}</value>
+  </data>
+  <data name="AudioProcess.Volume" xml:space="preserve">
+    <value>Volume: {0:P0}</value>
+  </data>
+  <data name="AudioProcess.Playing" xml:space="preserve">
+    <value>Playing</value>
+  </data>
+  <data name="AudioProcess.Silent" xml:space="preserve">
+    <value>Silent</value>
+  </data>
+</root>

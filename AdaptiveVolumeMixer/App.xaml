@@ -1,7 +1,9 @@
 ﻿<Application x:Class="AdaptiveVolumeMixer.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:converters="clr-namespace:AdaptiveVolumeMixer.Converters">
+             xmlns:converters="clr-namespace:AdaptiveVolumeMixer.Converters"
+             xmlns:l="clr-namespace:AdaptiveVolumeMixer.Converters"
+             ShutdownMode="OnExplicitShutdown">
         <Application.Resources>
 
                 <!-- ===== 全局转换器 ===== -->

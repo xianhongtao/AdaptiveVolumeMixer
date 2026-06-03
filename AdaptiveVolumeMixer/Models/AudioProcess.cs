@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using AdaptiveVolumeMixer.Services;
 
 namespace AdaptiveVolumeMixer.Models;
 
@@ -78,6 +79,7 @@ public class AudioProcess
 
     public override string ToString()
     {
-        return $"{DisplayName} (层级 {Level}) - 音量: {CurrentVolume:P0} - {(IsPlaying ? "播放中" : "静默")}";
+        var loc = LocalizationManager.Instance;
+        return $"{DisplayName} ({loc.GetString("AudioProcess.Level", Level)}) - {loc.GetString("AudioProcess.Volume", CurrentVolume)} - {(IsPlaying ? loc.GetString("AudioProcess.Playing") : loc.GetString("AudioProcess.Silent"))}";
     }
 }

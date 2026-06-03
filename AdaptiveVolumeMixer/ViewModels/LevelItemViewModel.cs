@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using AdaptiveVolumeMixer.Services;
 
 namespace AdaptiveVolumeMixer.ViewModels;
 
@@ -37,5 +38,5 @@ public partial class LevelItemViewModel : ObservableObject
     public string FullDisplayName => $"{DisplayName} ({ProcessName})";
 
     public string VolumeText => $"{CurrentVolume:P0}";
-    public string StatusText => IsPlaying ? "🔊 播放中" : (IsSuppressed ? "🔇 被压制" : "🔈 静默");
+    public string StatusText => IsPlaying ? LocalizationManager.Instance.GetString("Status.Playing") : (IsSuppressed ? LocalizationManager.Instance.GetString("Status.Suppressed") : LocalizationManager.Instance.GetString("Status.Silent"));
 }

@@ -19,6 +19,56 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // 读取配置中的语言设置
+        string? configLanguage = null;
+        var configPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
+        try
+        {
+            if (System.IO.File.Exists(configPath))
+            {
+                var config = System.Text.Json.JsonSerializer.Deserialize<Models.AppConfig>(
+                    System.IO.File.ReadAllText(configPath),
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                configLanguage = config?.Language;
+            }
+        }
+        catch { }
+
+        // 如果语言未配置，弹出选择窗口
+        if (string.IsNullOrWhiteSpace(configLanguage))
+        {
+            var dialog = new LanguageSelectionDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                configLanguage = dialog.SelectedLanguage;
+
+                // 如果勾选了"记住选择"，写入 config.json
+                if (dialog.RememberChoice)
+                {
+                    try
+                    {
+                        var config = System.IO.File.Exists(configPath)
+                            ? System.Text.Json.JsonSerializer.Deserialize<Models.AppConfig>(
+                                System.IO.File.ReadAllText(configPath),
+                                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                            : Models.AppConfig.CreateDefault();
+
+                        if (config != null)
+                        {
+                            config.Language = configLanguage;
+                            System.IO.File.WriteAllText(configPath,
+                                System.Text.Json.JsonSerializer.Serialize(config,
+                                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+                        }
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        // 初始化本地化（必须在 DI 容器构建之前）
+        LocalizationManager.Instance.Initialize(configLanguage);
+
         var services = new ServiceCollection();
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();
@@ -38,15 +88,15 @@ public partial class App : Application
             Icon = System.Drawing.Icon.ExtractAssociatedIcon(
                 System.Windows.Forms.Application.ExecutablePath),
             Visible = true,
-            Text = "Adaptive Volume Mixer",
+            Text = LocalizationManager.Instance.GetString("App.Title"),
             ContextMenuStrip = new ContextMenuStrip()
         };
 
         // 菜单项
-        var showItem = new ToolStripMenuItem("显示窗口(&S)");
+        var showItem = new ToolStripMenuItem(LocalizationManager.Instance.GetString("Tray.ShowWindow"));
         showItem.Click += (_, _) => ShowMainWindow();
 
-        var exitItem = new ToolStripMenuItem("退出(&X)");
+        var exitItem = new ToolStripMenuItem(LocalizationManager.Instance.GetString("Tray.Exit"));
         exitItem.Click += (_, _) => ExitApplication();
 
         _notifyIcon.ContextMenuStrip.Items.Add(showItem);
@@ -83,8 +133,8 @@ public partial class App : Application
             _showBalloonOnce = false;
             _notifyIcon.ShowBalloonTip(
                 3000,
-                "Adaptive Volume Mixer",
-                "程序已最小化到系统托盘，双击图标可恢复窗口",
+                LocalizationManager.Instance.GetString("Tray.BalloonTitle"),
+                LocalizationManager.Instance.GetString("Tray.BalloonText"),
                 ToolTipIcon.Info);
         }
     }
@@ -103,6 +153,7 @@ public partial class App : Application
 
     private static void ConfigureServices(ServiceCollection services)
     {
+        services.AddSingleton(LocalizationManager.Instance);
         services.AddSingleton<AudioSessionService>();
         services.AddSingleton<ConfigManager>();
         services.AddSingleton<VolumeController>();

@@ -29,7 +29,7 @@ public partial class MainViewModel : ObservableObject
     /// 状态信息
     /// </summary>
     [ObservableProperty]
-    private string _statusText = "就绪";
+    private string _statusText = LocalizationManager.Instance.GetString("Status.Ready");
 
     /// <summary>
     /// 监控是否运行中
@@ -70,7 +70,7 @@ public partial class MainViewModel : ObservableObject
     private void InitializeAudio()
     {
         bool success = _audioSessionService.Initialize();
-        StatusText = success ? "音频系统初始化成功" : "音频系统初始化失败，请以管理员身份运行";
+        StatusText = success ? LocalizationManager.Instance.GetString("Status.AudioInitSuccess") : LocalizationManager.Instance.GetString("Status.AudioInitFailed");
     }
 
     private void LoadConfig()
@@ -113,8 +113,8 @@ public partial class MainViewModel : ObservableObject
         }
         var untrackedCount = AvailableProcesses.Count;
         StatusText = untrackedCount == sessions.Count
-            ? $"已发现 {sessions.Count} 个音频进程"
-            : $"已发现 {sessions.Count} 个音频进程（{untrackedCount} 个未管理）";
+            ? LocalizationManager.Instance.GetString("Status.FoundProcesses", sessions.Count)
+            : LocalizationManager.Instance.GetString("Status.FoundProcessesUnmanaged", sessions.Count, untrackedCount);
     }
 
     /// <summary>
@@ -125,7 +125,7 @@ public partial class MainViewModel : ObservableObject
     {
         _volumeController.Start();
         IsMonitoring = true;
-        StatusText = "监控已启动";
+        StatusText = LocalizationManager.Instance.GetString("Status.MonitoringStarted");
     }
 
     /// <summary>
@@ -136,7 +136,7 @@ public partial class MainViewModel : ObservableObject
     {
         _volumeController.Stop();
         IsMonitoring = false;
-        StatusText = "监控已停止";
+        StatusText = LocalizationManager.Instance.GetString("Status.MonitoringStopped");
     }
 
     private bool CanStartMonitoring() => !IsMonitoring;
@@ -176,7 +176,7 @@ public partial class MainViewModel : ObservableObject
         _volumeController.RemoveProcessFromLevel(item.ProcessName, item.Level);
         RefreshLevelViews();
         RefreshAvailableProcesses();
-        StatusText = $"已从层级 {item.Level} 移除 {item.ProcessName}";
+        StatusText = LocalizationManager.Instance.GetString("Status.ProcessRemoved", item.Level, item.ProcessName);
     }
 
     /// <summary>
@@ -192,7 +192,7 @@ public partial class MainViewModel : ObservableObject
         RefreshLevelViews();
         RefreshAvailableProcesses();
         var levelVm = Levels.FirstOrDefault(l => l.Level == level);
-        StatusText = $"已添加 {process.DisplayName} 到 {levelVm?.DisplayName ?? level.ToString()}";
+        StatusText = LocalizationManager.Instance.GetString("Status.ProcessAdded", process.DisplayName, levelVm?.DisplayName ?? level.ToString());
     }
 
     /// <summary>
@@ -202,7 +202,7 @@ public partial class MainViewModel : ObservableObject
     private void SaveConfig()
     {
         _configManager.SaveConfig();
-        StatusText = "配置已保存";
+        StatusText = LocalizationManager.Instance.GetString("Status.ConfigSaved");
     }
 
     /// <summary>
@@ -212,13 +212,13 @@ public partial class MainViewModel : ObservableObject
     private void AddLevel()
     {
         // 新层级放在列表末尾（最低优先级），使用极低的 Level 值确保排序后排最后
-        var newLevelConfig = new LevelConfig(int.MinValue, "新层级");
+        var newLevelConfig = new LevelConfig(int.MinValue, LocalizationManager.Instance.GetString("Level.NewLevel"));
         _configManager.Config.Levels.Add(newLevelConfig);
 
         RenumberLevels();
         _configManager.SaveConfig();
 
-        StatusText = "已添加新层级";
+        StatusText = LocalizationManager.Instance.GetString("Status.LevelAdded");
     }
 
     /// <summary>
@@ -248,7 +248,7 @@ public partial class MainViewModel : ObservableObject
         RenumberLevels();
         _configManager.SaveConfig();
 
-        StatusText = $"已删除 {removedName}";
+        StatusText = LocalizationManager.Instance.GetString("Status.LevelRemoved", removedName);
     }
 
     private bool CanRemoveLevel => Levels.Count > 1;
@@ -271,10 +271,10 @@ public partial class MainViewModel : ObservableObject
 
             // 如果名称仍为默认模板（如 "层级 N" 或 "新层级"），则自动更新
             if (string.IsNullOrWhiteSpace(cfg.DisplayName) ||
-                cfg.DisplayName.StartsWith("层级 ") ||
-                cfg.DisplayName == "新层级")
+                cfg.DisplayName == LocalizationManager.Instance.GetString("Level.NewLevel") ||
+                Enumerable.Range(-100, 200).Any(n => cfg.DisplayName == string.Format(LocalizationManager.Instance.GetString("Default.LevelName"), n)))
             {
-                cfg.DisplayName = $"层级 {cfg.Level}";
+                cfg.DisplayName = string.Format(LocalizationManager.Instance.GetString("Default.LevelName"), cfg.Level);
             }
         }
 

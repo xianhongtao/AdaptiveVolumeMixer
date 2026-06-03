@@ -16,6 +16,11 @@ public class AppConfig
     public int PollingIntervalMs { get; set; } = 1000;
 
     /// <summary>
+    /// 界面语言（null=自动检测, "zh"=中文, "en"=英文）
+    /// </summary>
+    public string? Language { get; set; }
+
+    /// <summary>
     /// 创建默认配置
     /// </summary>
     public static AppConfig CreateDefault()
@@ -25,12 +30,12 @@ public class AppConfig
             PollingIntervalMs = 1000,
             Levels = new List<LevelConfig>
             {
-                new(0, "层级 0"),
-                new(-1, "层级 -1"),
-                new(-2, "层级 -2"),
-                new(-3, "层级 -3"),
-                new(-4, "层级 -4"),
-                new(-5, "层级 -5"),
+                new(0, Services.LocalizationManager.Instance.GetString("Default.LevelName", 0)),
+                new(-1, Services.LocalizationManager.Instance.GetString("Default.LevelName", -1)),
+                new(-2, Services.LocalizationManager.Instance.GetString("Default.LevelName", -2)),
+                new(-3, Services.LocalizationManager.Instance.GetString("Default.LevelName", -3)),
+                new(-4, Services.LocalizationManager.Instance.GetString("Default.LevelName", -4)),
+                new(-5, Services.LocalizationManager.Instance.GetString("Default.LevelName", -5)),
             }
         };
     }
