@@ -162,6 +162,24 @@
   <data name="Hint.NoProcesses" xml:space="preserve">
     <value>（暂无进程，请从右侧拖拽添加）</value>
   </data>
+  <data name="ExitDialog.Title" xml:space="preserve">
+    <value>关闭窗口</value>
+  </data>
+  <data name="ExitDialog.Exit" xml:space="preserve">
+    <value>退出程序</value>
+  </data>
+  <data name="ExitDialog.MinimizeToTray" xml:space="preserve">
+    <value>最小化到托盘</value>
+  </data>
+  <data name="ExitDialog.Remember" xml:space="preserve">
+    <value>记住选择，下次不再询问</value>
+  </data>
+  <data name="ExitDialog.SavedTitle" xml:space="preserve">
+    <value>设置已保存</value>
+  </data>
+  <data name="ExitDialog.SavedText" xml:space="preserve">
+    <value>关闭行为已保存，可在 config.json 中修改 CloseAction 字段（exit=退出, tray=托盘）</value>
+  </data>
   <data name="AudioProcess.Level" xml:space="preserve">
     <value>层级 {0}</value>
   </data>

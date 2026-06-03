@@ -162,6 +162,24 @@
   <data name="Hint.NoProcesses" xml:space="preserve">
     <value>(No processes, drag from the right panel)</value>
   </data>
+  <data name="ExitDialog.Title" xml:space="preserve">
+    <value>Close Window</value>
+  </data>
+  <data name="ExitDialog.Exit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="ExitDialog.MinimizeToTray" xml:space="preserve">
+    <value>Minimize to Tray</value>
+  </data>
+  <data name="ExitDialog.Remember" xml:space="preserve">
+    <value>Remember choice</value>
+  </data>
+  <data name="ExitDialog.SavedTitle" xml:space="preserve">
+    <value>Setting Saved</value>
+  </data>
+  <data name="ExitDialog.SavedText" xml:space="preserve">
+    <value>Close behavior saved. You can change CloseAction in config.json (exit=quit, tray=minimize)</value>
+  </data>
   <data name="AudioProcess.Level" xml:space="preserve">
     <value>Level {0}</value>
   </data>

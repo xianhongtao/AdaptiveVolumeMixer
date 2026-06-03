@@ -140,6 +140,21 @@ public partial class App : Application
     }
 
     /// <summary>
+    /// 显示"关闭行为已保存"的气泡提示
+    /// </summary>
+    internal void ShowCloseActionSavedBalloonTip()
+    {
+        if (_notifyIcon != null)
+        {
+            _notifyIcon.ShowBalloonTip(
+                5000,
+                LocalizationManager.Instance.GetString("ExitDialog.SavedTitle"),
+                LocalizationManager.Instance.GetString("ExitDialog.SavedText"),
+                ToolTipIcon.Info);
+        }
+    }
+
+    /// <summary>
     /// 从托盘彻底退出应用
     /// </summary>
     private void ExitApplication()

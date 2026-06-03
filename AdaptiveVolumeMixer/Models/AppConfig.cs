@@ -21,6 +21,11 @@ public class AppConfig
     public string? Language { get; set; }
 
     /// <summary>
+    /// 关闭窗口行为（null=每次询问, "exit"=直接退出, "tray"=最小化到托盘）
+    /// </summary>
+    public string? CloseAction { get; set; }
+
+    /// <summary>
     /// 创建默认配置
     /// </summary>
     public static AppConfig CreateDefault()

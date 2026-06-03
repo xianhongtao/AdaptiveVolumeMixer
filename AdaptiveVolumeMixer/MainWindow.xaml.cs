@@ -33,7 +33,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// 窗口关闭拦截：取消关闭并隐藏到系统托盘
+    /// 窗口关闭拦截：可配置直接退出/最小化到托盘/每次询问
     /// </summary>
     private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
@@ -43,9 +43,99 @@ public partial class MainWindow : Window
             return;
         }
 
-        e.Cancel = true;
-        Hide();
-        (Application.Current as App)?.ShowMinimizeBalloonTip();
+        // 读取配置中的关闭行为
+        var configPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
+        string? closeAction = null;
+        try
+        {
+            if (System.IO.File.Exists(configPath))
+            {
+                var config = System.Text.Json.JsonSerializer.Deserialize<Models.AppConfig>(
+                    System.IO.File.ReadAllText(configPath),
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                closeAction = config?.CloseAction;
+            }
+        }
+        catch { }
+
+        // 根据配置决定行为
+        if (closeAction == "exit")
+        {
+            // 直接退出
+            AllowClose = false; // 防止递归
+            Application.Current.Shutdown();
+            return;
+        }
+
+        if (closeAction == "tray")
+        {
+            // 直接最小化到托盘
+            e.Cancel = true;
+            Hide();
+            (Application.Current as App)?.ShowMinimizeBalloonTip();
+            return;
+        }
+
+        // 未配置：弹出选择窗口
+        var dialog = new ExitDialog();
+        if (dialog.ShowDialog() == true)
+        {
+            if (dialog.ShouldExit)
+            {
+                // 记住选择
+                if (dialog.RememberChoice)
+                {
+                    SaveCloseAction("exit");
+                    ShowCloseActionSavedBalloon();
+                }
+                Application.Current.Shutdown();
+            }
+            else
+            {
+                // 记住选择
+                if (dialog.RememberChoice)
+                {
+                    SaveCloseAction("tray");
+                    ShowCloseActionSavedBalloon();
+                }
+                e.Cancel = true;
+                Hide();
+                (Application.Current as App)?.ShowMinimizeBalloonTip();
+            }
+        }
+        else
+        {
+            // 直接关闭弹窗，默认最小化到托盘
+            e.Cancel = true;
+            Hide();
+        }
+    }
+
+    private static void SaveCloseAction(string action)
+    {
+        try
+        {
+            var configPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
+            var config = System.IO.File.Exists(configPath)
+                ? System.Text.Json.JsonSerializer.Deserialize<Models.AppConfig>(
+                    System.IO.File.ReadAllText(configPath),
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                : Models.AppConfig.CreateDefault();
+
+            if (config != null)
+            {
+                config.CloseAction = action;
+                System.IO.File.WriteAllText(configPath,
+                    System.Text.Json.JsonSerializer.Serialize(config,
+                        new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+            }
+        }
+        catch { }
+    }
+
+    private void ShowCloseActionSavedBalloon()
+    {
+        (Application.Current as App)?.ShowCloseActionSavedBalloonTip();
     }
 
     /// <summary>
