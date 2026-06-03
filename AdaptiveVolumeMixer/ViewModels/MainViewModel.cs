@@ -65,6 +65,8 @@ public partial class MainViewModel : ObservableObject
 
         LoadConfig();
         InitializeAudio();
+        _volumeController.RefreshProcesses();
+        RefreshLevelViews();
         RefreshAvailableProcesses();
     }
 
