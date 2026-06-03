@@ -99,6 +99,9 @@
   <data name="Status.MonitoringStopped" xml:space="preserve">
     <value>Monitoring stopped</value>
   </data>
+  <data name="Status.MonitoringStoppedWithRestore" xml:space="preserve">
+    <value>Monitoring stopped, volumes restored</value>
+  </data>
   <data name="Status.ConfigSaved" xml:space="preserve">
     <value>Configuration saved</value>
   </data>

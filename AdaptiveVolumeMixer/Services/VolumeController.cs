@@ -74,6 +74,30 @@ public class VolumeController : IDisposable
         _isRunning = false;
         _cts?.Cancel();
         _monitorTask?.Wait(2000);
+
+        // 停止监控后恢复所有被压制的音量到原始值
+        RestoreAllVolumes();
+    }
+
+    /// <summary>
+    /// 恢复所有被压制进程的音量到原始值
+    /// </summary>
+    private void RestoreAllVolumes()
+    {
+        lock (_lock)
+        {
+            foreach (var process in _trackedProcesses.Values)
+            {
+                if (process.IsSuppressed)
+                {
+                    process.IsSuppressed = false;
+                    process.CurrentVolume = process.OriginalVolume;
+                    _audioSessionService.SetProcessVolume(process.ProcessId, process.OriginalVolume, process.DisplayName);
+                }
+            }
+        }
+
+        OnStateChanged?.Invoke();
     }
 
     /// <summary>

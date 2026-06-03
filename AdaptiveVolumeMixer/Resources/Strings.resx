@@ -99,6 +99,9 @@
   <data name="Status.MonitoringStopped" xml:space="preserve">
     <value>监控已停止</value>
   </data>
+  <data name="Status.MonitoringStoppedWithRestore" xml:space="preserve">
+    <value>监控已停止，音量已恢复</value>
+  </data>
   <data name="Status.ConfigSaved" xml:space="preserve">
     <value>配置已保存</value>
   </data>

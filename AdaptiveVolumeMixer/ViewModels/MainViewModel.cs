@@ -136,7 +136,7 @@ public partial class MainViewModel : ObservableObject
     {
         _volumeController.Stop();
         IsMonitoring = false;
-        StatusText = LocalizationManager.Instance.GetString("Status.MonitoringStopped");
+        StatusText = LocalizationManager.Instance.GetString("Status.MonitoringStoppedWithRestore");
     }
 
     private bool CanStartMonitoring() => !IsMonitoring;
